@@ -286,44 +286,15 @@ function updateCustomerPatienceTime() {
 
 // Oyun başlangıcında saati tamamen sıfırlayan ve döngüyü temiz başlatan sistem
 function startSystemClock() {
-    if(mainClockInterval) clearInterval(mainClockInterval);
+    if (mainClockInterval) clearInterval(mainClockInterval);
     
-    enterEmptyWaitState(); // İlk olarak 10 saniyelik boş bekleme süresine girilsin.
+    enterEmptyWaitState(); // İlk 10 saniyelik boş bekleme süresi
 
-    mainClockInterval = setInterval(() => {
-        if(isWarningActive || document.getElementById('resultModal').style.display === 'flex' || systemState === 'DAY_END') return;
-
-        timeRemaining--;
-        updateTimerBarUI();
-
-        if (timeRemaining <= 0) {
-            if (systemState === 'EMPTY_WAIT') {
-                if (dayServedCount >= dailyLimit) {
-                    triggerDayEndState();
-                } else {
-                    enterCustomerActiveState();
-                }
-            } else if (systemState === 'CUSTOMER_ACTIVE') {
-                dayServedCount++;
-                currentCustomerIndex++;
-                cart = [];
-                renderCart();
-                
-                // ESKİ: customers.length -> YENİ: activeDayCustomers.length
-                if (currentCustomerIndex >= activeDayCustomers.length) {
-                    triggerGameOverState();
-                } else if (dayServedCount >= dailyLimit) {
-                    triggerDayEndState();
-                } else {
-                    enterEmptyWaitState();
-                }
-            }
-        }
-    }, 1000);
+    mainClockInterval = setInterval(systemClockTick, 1000);
 }
 
 function systemClockTick() {
-    if(isWarningActive || document.getElementById('resultModal').style.display === 'flex' || systemState === 'DAY_END') return;
+    if (isWarningActive || document.getElementById('resultModal').style.display === 'flex' || systemState === 'DAY_END') return;
 
     timeRemaining--;
     updateTimerBarUI();
@@ -336,7 +307,6 @@ function systemClockTick() {
                 enterCustomerActiveState();
             }
         } else if (systemState === 'CUSTOMER_ACTIVE') {
-            // Müşteri bekleme süresi bitti ve eczaneyi terk ediyor!
             handleCustomerTimeout();
         }
     }
@@ -442,18 +412,17 @@ function updateTimerBarUI() {
 }
 
 function startDay() {
+    if (gameStarted) return; // Zaten başladıysa tekrar tetikleme
     gameStarted = true;
+    
     document.getElementById('guideText').style.display = 'none';
     document.getElementById('startBtn').style.display = 'none';
     document.getElementById('handbookArea').style.display = 'flex';
     
-    // Her gün başında ana listeden rastgele müşteriler seçiyoruz
     generateRandomCustomersForDay();
-    
     buildHandbookFilters();
     renderHandbook();
     
-    // Günü doğrudan boş zaman ile başlatıyoruz (10 saniye bekleme)
     startSystemClock();
 }
 
