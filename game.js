@@ -124,8 +124,8 @@ let currentCustomerIndex = 0;
 let cart = [];
 let isWarningActive = false;
 let money = 300;
-let xp = 0;             // Deneyim Puanı
-let ep = 0;             // Eczane Puanı
+let xp = 0;             // YENİ: Deneyim Puanı
+let ep = 0;             // YENİ: Eczane Puanı
 let gameStarted = false;
 let isNabizVerified = false; // Oyuncunun kodu başarıyla çözüp çözmediğini tutar
 
