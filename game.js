@@ -23,7 +23,7 @@ const symptoms = [
 
 const diseaseTypes = [
     { id: "TYP-001", name: "Dermatoloji", desc: "Cilt yüzeyinde oluşan, genellikle dış etken kaynaklı rahatsızlıklar." },
-    { id: "TYP-002", name: "Nörolojik", desc: "Sinir sistemi ve beyin fonksiyonlarıyla ilgili hafif veya ağır ağrı/disfonksiyonlar." },
+    { id: "TYP-002", name: "Nörolojik", desc: "Sinir sistema ve beyin fonksiyonlarıyla ilgili hafif veya ağır ağrı/disfonksiyonlar." },
     { id: "TYP-003", name: "Ağız Sağlığı", desc: "Diş, diş eti og ağız içi mukozasında görülen lokalize sorunlar." },
     { id: "TYP-004", name: "Solunum", desc: "Akciğer ve solunum yollarını etkileyen, mevsimselliği yüksek hastalıklar." },
     { id: "TYP-005", name: "Sindirim", desc: "Mide ve bağırsak florasını etkileyen, beslenme veya mikrobik kaynaklı durumlar." },
@@ -122,19 +122,19 @@ const ageGroupsMap = {
 
 let currentCustomerIndex = 0;
 let activeDayCustomers = []; 
-let playedCustomersPool = []; // Daha önceki günlerde karşılaşılmış müşterileri tutacak havuz // O gün dükkana gelecek rastgele seçilen müşterilerin listesi
+let playedCustomersPool = []; 
 let cart = [];
 let isWarningActive = false;
 let money = 300;
-let xp = 0;             // YENİ: Deneyim Puanı
-let ep = 0;             // YENİ: Eczane Puanı
+let xp = 0;             
+let ep = 0;             
 let gameStarted = false;
-let isNabizVerified = false; // Oyuncunun kodu başarıyla çözüp çözmediğini tutar
+let isNabizVerified = false; 
 
 let currentShopFilter = 'HEPSİ';
 let currentDepotFilter = 'HEPSİ';
 let currentMode = 'SHOP'; 
-let currentHandbookTab = 'DISEASES'; // Varsayılan sekme DISEASES yapıldı
+let currentHandbookTab = 'DISEASES'; 
 
 let moneyClickCount = 0;
 let moneyClickTimeout;
@@ -147,7 +147,7 @@ let mainClockInterval = null;
 let currentDayNumber = 1;
 let dayServedCount = 0; 
 const dailyLimit = 5;
-const totalDaysLimit = 4; // Toplam oynanacak gün sınırı (4 Gün * 5 Hasta = 20 Benzersiz Hasta)
+const totalDaysLimit = 4; 
 
 // === 4. SKOR VE BİRİM GÜNCELLEME FONKSİYONLARI ===
 
@@ -164,7 +164,7 @@ function updateMoney(amount) {
 
 function updateXp(amount) {
     xp += amount;
-    if (xp < 0) xp = 0; // Deneyim eksiye düşmesin
+    if (xp < 0) xp = 0; 
     const display = document.getElementById('xpDisplay');
     if (!display) return;
     display.innerText = `${xp} XP`;
@@ -175,7 +175,7 @@ function updateXp(amount) {
 }
 
 function updateEp(amount) {
-    ep += amount; // Eczane puanı eksiye düşebilir
+    ep += amount; 
     const display = document.getElementById('epDisplay');
     if (!display) return;
     display.innerText = `${ep} EP`;
@@ -187,7 +187,68 @@ function updateEp(amount) {
 
 // === 5. ÇEKİRDEK OYUN FONKSİYONLARI ===
 
-// Müşteri dükkana girdiğinde dinamik olarak reçete kodunu üretir
+// Müşterileri kilit ekranından önce belirleme fonksiyonu
+function generateRandomCustomersForDay() {
+    activeDayCustomers = [];
+    currentCustomerIndex = 0; 
+    
+    let availablePool = customers.filter(c => !playedCustomersPool.some(played => played.id === c.id));
+    
+    for (let i = 0; i < dailyLimit; i++) {
+        if (availablePool.length === 0) break; 
+        const randomIndex = Math.floor(Math.random() * availablePool.length);
+        const selectedCustomer = availablePool[randomIndex];
+        
+        activeDayCustomers.push(selectedCustomer);
+        playedCustomersPool.push(selectedCustomer); 
+        
+        availablePool.splice(randomIndex, 1); 
+    }
+}
+
+// Bildirimi güvenli bir şekilde güncelleyen fonksiyon
+function updateLockScreenNotification() {
+    const listElement = document.getElementById('lockScreenDiseaseList');
+    if (!listElement) return;
+    
+    listElement.innerHTML = '';
+    
+    if (activeDayCustomers.length === 0) {
+        generateRandomCustomersForDay();
+    }
+    
+    activeDayCustomers.forEach(customer => {
+        const diseaseObj = diseases.find(d => d.id === customer.disease);
+        const diseaseName = diseaseObj ? diseaseObj.name : "Bilinmeyen Rahatsızlık";
+        
+        const li = document.createElement('li');
+        li.style.marginBottom = "4px";
+        li.innerText = diseaseName;
+        listElement.appendChild(li);
+    });
+}
+
+function startDay() {
+    if (gameStarted) return; 
+    gameStarted = true;
+    
+    // Kilit ekranını gizle, el kitabını göster
+    document.getElementById('lockScreenArea').style.style.setProperty('display', 'none', 'important');
+    document.getElementById('lockScreenArea').style.display = 'none';
+    document.getElementById('handbookArea').style.display = 'flex';
+    
+    // Uygulama sekmelerini göster
+    const switcher = document.getElementById('appSwitcherTabs');
+    if (switcher) {
+        switcher.style.display = 'flex';
+    }
+    
+    buildHandbookFilters();
+    renderHandbook();
+    
+    startSystemClock();
+}
+
 function generatePrescriptionCodeForCustomer(customer) {
     const med = medicines.find(m => m.id === customer.prescribedMed);
     if (!med) return "HATA-KOD";
@@ -275,12 +336,9 @@ function initDepotMedicines() {
     });
 }
 
-// Oyun başlangıcında saati tamamen sıfırlayan ve döngüyü temiz başlatan sistem
 function startSystemClock() {
     if(mainClockInterval) clearInterval(mainClockInterval);
-    
-    enterEmptyWaitState(); // İlk olarak 10 saniyelik boş bekleme süresine girilsin.
-
+    enterEmptyWaitState(); 
     mainClockInterval = setInterval(systemClockTick, 1000);
 }
 
@@ -298,7 +356,6 @@ function systemClockTick() {
                 enterCustomerActiveState();
             }
         } else if (systemState === 'CUSTOMER_ACTIVE') {
-            // Müşteri bekleme süresi bitti ve eczaneyi terk ediyor!
             handleCustomerTimeout();
         }
     }
@@ -378,26 +435,20 @@ function triggerDayEndState() {
 function progressToNextDay() {
     currentDayNumber++;
     dayServedCount = 0;
-    gameStarted = false; // Yeniden günü başlat butonuna basılabilmesi için sıfırlanır
+    gameStarted = false; 
     
-    // Bir sonraki günün 5 rastgele hastasını seç
     generateRandomCustomersForDay(); 
     
-    // Kilit ekranını tekrar görünür yap, el kitabını gizle
     document.getElementById('lockScreenArea').style.display = 'flex';
     document.getElementById('handbookArea').style.display = 'none';
     
-    // Uygulama sekmelerini tekrar kilitle/gizle
     const switcher = document.getElementById('appSwitcherTabs');
     if (switcher) switcher.style.display = 'none';
     
-    // Yeni günün bildirimlerini kilit ekranına yaz
     updateLockScreenNotification();
     
-    // Kilit ekranı saatini de güncelleyebilirsiniz (Örn: sabah 08:00)
     document.getElementById('lockScreenClock').innerText = "08:00";
     
-    // Saat sayacını sıfırla ama kilit açılana kadar (startDay tetiklenene kadar) çalıştırma
     if(mainClockInterval) clearInterval(mainClockInterval);
     document.getElementById('c-prescription-code').innerText = "--";
     document.getElementById('customerOverlay').style.display = 'flex';
@@ -414,7 +465,7 @@ function triggerGameOverState() {
             <div class="customer-arrival-text" style="color: var(--success-color); font-size:1.3rem; line-height: 1.6;">
                 Tebrikler Eczacı!<br>
                 <span style="font-size:0.95rem; color:white; font-weight: normal;">
-                    4 gün boyunca 20 hastanın tamamına başarıyla hizmet verdin ve prototipi tamamladın!
+                    4 gub boyunca 20 hastanın tamamına başarıyla hizmet verdin ve prototipi tamamladın!
                 </span>
             </div>
         `;
@@ -429,47 +480,6 @@ function updateTimerBarUI() {
     bar.style.transform = `scaleX(${percentage / 100})`;
 }
 
-function startDay() {
-    if (gameStarted) return; 
-    gameStarted = true;
-    
-    // Kilit ekranını gizle, el kitabını göster
-    document.getElementById('lockScreenArea').style.display = 'none';
-    document.getElementById('handbookArea').style.display = 'flex';
-    
-    // Uygulama geçiş butonlarını telefon açılınca göster
-    const switcher = document.getElementById('appSwitcherTabs');
-    if (switcher) switcher.style.display = 'flex';
-    
-    buildHandbookFilters();
-    renderHandbook();
-    
-    // Süre sayacını ve hasta döngüsünü başlat
-    startSystemClock();
-}
-
-// Ana müşteri havuzundan günlük limit kadar rastgele benzersiz müşteri seçer
-function generateRandomCustomersForDay() {
-    activeDayCustomers = [];
-    currentCustomerIndex = 0; // Her gün başında indeks sıfırlanır
-    
-    // Henüz oynanmamış müşterileri filtreleyip yeni bir aday havuzu oluşturuyoruz
-    let availablePool = customers.filter(c => !playedCustomersPool.some(played => played.id === c.id));
-    
-    // Günlük limit kadar rastgele çekim yapıyoruz
-    for (let i = 0; i < dailyLimit; i++) {
-        if (availablePool.length === 0) break; 
-        const randomIndex = Math.floor(Math.random() * availablePool.length);
-        const selectedCustomer = availablePool[randomIndex];
-        
-        activeDayCustomers.push(selectedCustomer);
-        playedCustomersPool.push(selectedCustomer); // Seçilen hastayı "oynananlar" havuzuna ekliyoruz
-        
-        availablePool.splice(randomIndex, 1); // Seçimi bu günlük aday havuzundan da düşüyoruz
-    }
-}
-
-// === SÜRE BİTİMİNDE MÜŞTERİNİN TERK ETME SENARYOSU ===
 function handleCustomerTimeout() {
     const currentCustomer = activeDayCustomers[currentCustomerIndex];
     
@@ -497,7 +507,6 @@ function handleCustomerTimeout() {
 
     document.getElementById('customerPanel').style.borderColor = "var(--danger-color)";
 
-    // Sayaçları güncelle
     dayServedCount++;
     currentCustomerIndex++;
     cart = [];
@@ -513,7 +522,6 @@ function switchToDepot() {
     renderCart();
 }
 
-// Gerekirse dükkana geri dön
 function switchToShop() {
     currentMode = 'SHOP';
     cart = [];
@@ -543,7 +551,6 @@ function addToCart(medId) {
     if (currentMode === 'SHOP') {
         if(!gameStarted || systemState !== 'CUSTOMER_ACTIVE') return; 
         
-        // Reçete kodu çözümlenmemişse sepete ilaç eklenmesi engellenir!
         if(!isNabizVerified) {
             alert("⚠️ Lütfen önce Nabız uygulamasından reçete kodunu başarılı bir şekilde çözümleyin!");
             return;
@@ -620,8 +627,6 @@ function confirmPrescription() {
     }
 }
 
-// === İLAÇ SATIŞ ONAYI VE PUANLAMA SİSTEMİ ===
-
 function handleShopConfirm() {
     const currentCustomer = activeDayCustomers[currentCustomerIndex];
     const submitBtn = document.getElementById('submitBtn');
@@ -676,7 +681,6 @@ function handleShopConfirm() {
         }
     });
 
-    // Puanlama Algoritması Karar Mekanizması
     let earnedXp = 0;
     let earnedEp = 0;
     let isPerfectHeal = (healedCount === customerSymptoms.length);
@@ -689,12 +693,10 @@ function handleShopConfirm() {
         earnedEp = -5;
     }
 
-    // Puanları veritabanına/state'e işle ve UI'ı tetikle
     updateMoney(totalProfit);
     updateXp(earnedXp);
     updateEp(earnedEp);
 
-    // Pop-up içeriğini dinamik HTML olarak oluşturuyoruz
     document.getElementById('m-title').innerText = `${currentCustomer.name} - Teşhis Sonucu`;
     
     let scoreColorClass = isPerfectHeal ? "color: var(--success-color);" : "color: var(--danger-color);";
@@ -721,9 +723,7 @@ function closeModal() {
     document.getElementById('customerPanel').style.borderColor = "var(--border-color)";
     initShopMedicines();
     
-    // Günlük limit doldu mu kontrol et (5 hasta)
     if (dayServedCount >= dailyLimit) {
-        // Eğer 4. günün sonundaysak oyunu bitir
         if (currentDayNumber >= totalDaysLimit) {
             triggerGameOverState();
         } else {
@@ -788,11 +788,8 @@ function renderHandbook() {
             const item = document.createElement('div');
             item.className = 'group-item'; 
             
-            // Semptom ID'lerini Türkçe karşılıklarına çevir
             const symptomNames = d.symptoms.map(sId => symptomNamesMap[sId] || sId).join(', ');
-            // Yaş Grupları isimlerini çevir
             const ageNames = d.targetAges.map(ageId => ageGroupsMap[ageId] || ageId).join(', ');
-            // Tür adını çöz
             const typeObj = diseaseTypes.find(t => t.id === d.typeId);
             const typeName = typeObj ? typeObj.name : d.typeId;
 
@@ -857,8 +854,6 @@ function handleMoneyClick() {
         moneyClickTimeout = setTimeout(() => { moneyClickCount = 0; }, 400);
     }
 }
-
-// === NABIZ UYGULAMA MANTIK KODLARI ===
 
 function switchPhoneApp(appKey) {
     const handbookApp = document.getElementById('appHandbookContainer');
@@ -948,29 +943,7 @@ function verifyNabizCode() {
     }
 }
 
-function updateLockScreenNotification() {
-    const listElement = document.getElementById('lockScreenDiseaseList');
-    if (!listElement) return;
-    
-    listElement.innerHTML = '';
-    
-    if (activeDayCustomers.length === 0) {
-        // Eğer liste henüz seçilmediyse tekrar seçmeyi dene
-        generateRandomCustomersForDay();
-    }
-    
-    activeDayCustomers.forEach(customer => {
-        const diseaseObj = diseases.find(d => d.id === customer.disease);
-        const diseaseName = diseaseObj ? diseaseObj.name : "Bilinmeyen Rahatsızlık";
-        
-        const li = document.createElement('li');
-        li.style.marginBottom = "4px";
-        li.innerText = diseaseName;
-        listElement.appendChild(li);
-    });
-}
-
-// Global HTML olay bağlantıları
+// Global scope bağlantıları (HTML çağrıları için)
 window.startDay = startDay;
 window.switchToDepot = switchToDepot;
 window.switchToShop = switchToShop;
@@ -986,16 +959,21 @@ window.progressToNextDay = progressToNextDay;
 window.handleMoneyClick = handleMoneyClick;
 window.switchPhoneApp = switchPhoneApp;
 window.verifyNabizCode = verifyNabizCode;
+window.updateLockScreenNotification = updateLockScreenNotification;
+window.generateRandomCustomersForDay = generateRandomCustomersForDay;
 
+// Uygulama yüklenme döngüsü
 document.addEventListener("DOMContentLoaded", () => {
     initShopMedicines();
     initDepotMedicines();
     
-    // Rastgele müşterileri seçip arayüze basıyoruz
+    // Telefonun kilit ekranı butonlarını varsayılan olarak kesin olarak gizle
+    const switcher = document.getElementById('appSwitcherTabs');
+    if (switcher) {
+        switcher.style.display = 'none';
+    }
+    
+    // Hastaları belirle ve kilit ekranı bildirimlerini bas
     generateRandomCustomersForDay();
     updateLockScreenNotification();
-    
-    // Üst bar sekmelerinin kilit ekranında gizli olduğundan emin olalım
-    const switcher = document.getElementById('appSwitcherTabs');
-    if (switcher) switcher.style.display = 'none';
 });
