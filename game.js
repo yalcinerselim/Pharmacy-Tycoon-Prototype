@@ -306,7 +306,11 @@ function systemClockTick() {
 
 function enterEmptyWaitState() {
     if (currentCustomerIndex >= activeDayCustomers.length) {
-        triggerGameOverState();
+        if (currentDayNumber >= totalDaysLimit) {
+            triggerGameOverState();
+        } else {
+            triggerDayEndState();
+        }
         return;
     }
     systemState = 'EMPTY_WAIT';
@@ -485,6 +489,17 @@ function handleCustomerTimeout() {
     currentCustomerIndex++;
     cart = [];
     renderCart();
+
+    // Müşteri süresi bittiğinde de günün veya oyunun bitip bitmediğini denetle
+    if (currentCustomerIndex >= activeDayCustomers.length || dayServedCount >= dailyLimit) {
+        if (currentDayNumber >= totalDaysLimit) {
+            triggerGameOverState();
+        } else {
+            triggerDayEndState();
+        }
+    } else {
+        enterEmptyWaitState();
+    }
 }
 
 function switchToDepot() {
