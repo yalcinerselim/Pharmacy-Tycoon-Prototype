@@ -769,94 +769,99 @@ function confirmPrescription() {
 }
 
 function handleShopConfirm() {
-    const currentCustomer = activeDayCustomers[currentCustomerIndex];
-    const submitBtn = document.getElementById('submitBtn');
-    const customerPanel = document.getElementById('customerPanel');
+    const currentCustomer = activeDayCustomers[currentCustomerIndex]; //
+    const submitBtn = document.getElementById('submitBtn'); //[cite: 3]
+    const customerPanel = document.getElementById('customerPanel'); //[cite: 3]
 
-    const primaryMed = cart[0];
-    const customerAge = currentCustomer.ageGroup.trim().toLowerCase();
+    const primaryMed = cart[0]; //[cite: 3]
+    const customerAge = currentCustomer.ageGroup.trim().toLowerCase(); //[cite: 3]
 
     const isAgeCompatible = primaryMed.compatibility.some(ageId => {
-        const mappedAgeName = (ageGroupsMap[ageId] || "").trim().toLowerCase();
-        return mappedAgeName === customerAge;
+        const mappedAgeName = (ageGroupsMap[ageId] || "").trim().toLowerCase(); //[cite: 3]
+        return mappedAgeName === customerAge; //[cite: 3]
     });
 
-    if (!isAgeCompatible) {
-        isWarningActive = true;
-        submitBtn.disabled = true;
-        submitBtn.classList.remove('active');
-        submitBtn.classList.add('warning');
-        submitBtn.innerText = "Bu müşteriye bu ilacı veremezsiniz!";
+    if (!isAgeCompatible) { //[cite: 3]
+        isWarningActive = true; //[cite: 3]
+        submitBtn.disabled = true; //[cite: 3]
+        submitBtn.classList.remove('active'); //[cite: 3]
+        submitBtn.classList.add('warning'); //[cite: 3]
+        submitBtn.innerText = "Bu müşteriye bu ilacı veremezsiniz!"; //[cite: 3]
         setTimeout(() => {
-            isWarningActive = false;
-            submitBtn.classList.remove('warning');
-            submitBtn.innerText = "Onayla";
-            renderCart();
-        }, 5000);
-        return;
+            isWarningActive = false; //[cite: 3]
+            submitBtn.classList.remove('warning'); //[cite: 3]
+            submitBtn.innerText = "Onayla"; //[cite: 3]
+            renderCart(); //[cite: 3]
+        }, 5000); //[cite: 3]
+        return; //[cite: 3]
     }
 
-    const customerSymptoms = currentCustomer.symptomsList;
-    let totalProfit = 0;
-    let reportHTML = "";
+    const customerSymptoms = currentCustomer.symptomsList; //[cite: 3]
+    let totalProfit = 0; //[cite: 3]
+    let reportHTML = ""; //[cite: 3]
 
-    let combinedMedSymptoms = [];
+    let combinedMedSymptoms = []; //[cite: 3]
     cart.forEach(med => {
-        med.count--;
-        totalProfit += med.price;
-        combinedMedSymptoms = combinedMedSymptoms.concat(med.symptoms);
+        med.count--; // Arka planda stok düşüyor[cite: 3]
+        totalProfit += med.price; //[cite: 3]
+        combinedMedSymptoms = combinedMedSymptoms.concat(med.symptoms); //[cite: 3]
     });
 
-    let healedCount = 0;
+    let healedCount = 0; //[cite: 3]
 
     customerSymptoms.forEach(symptom => {
-        let isHealed = combinedMedSymptoms.some(mSym => mSym.toLowerCase().trim() === symptom.toLowerCase().trim());
+        let isHealed = combinedMedSymptoms.some(mSym => mSym.toLowerCase().trim() === symptom.toLowerCase().trim()); //[cite: 3]
         
         if (isHealed) {
-            healedCount++;
-            const turkishSymptomName = symptomNamesMap[symptom] || symptom;
-            reportHTML += `<li class="healed">İyileştirildi: <strong>${turkishSymptomName}</strong></li>`;
+            healedCount++; //[cite: 3]
+            const turkishSymptomName = symptomNamesMap[symptom] || symptom; //[cite: 3]
+            reportHTML += `<li class="healed">İyileştirildi: <strong>${turkishSymptomName}</strong></li>`; //[cite: 3]
         } else {
-            const turkishSymptomName = symptomNamesMap[symptom] || symptom;
-            reportHTML += `<li class="failed">İyileştirilemedi: <strong>${turkishSymptomName}</strong></li>`;
+            const turkishSymptomName = symptomNamesMap[symptom] || symptom; //[cite: 3]
+            reportHTML += `<li class="failed">İyileştirilemedi: <strong>${turkishSymptomName}</strong></li>`; //[cite: 3]
         }
     });
 
-    let earnedXp = 0;
-    let earnedEp = 0;
-    let isPerfectHeal = (healedCount === customerSymptoms.length);
+    let earnedXp = 0; //[cite: 3]
+    let earnedEp = 0; //[cite: 3]
+    let isPerfectHeal = (healedCount === customerSymptoms.length); //[cite: 3]
 
     if (isPerfectHeal) {
-        earnedXp = 10;
-        earnedEp = 5;
+        earnedXp = 10; //[cite: 3]
+        earnedEp = 5; //[cite: 3]
     } else {
-        earnedXp = 2;
-        earnedEp = -5;
+        earnedXp = 2; //[cite: 3]
+        earnedEp = -5; //[cite: 3]
     }
 
-    updateMoney(totalProfit);
-    updateXp(earnedXp);
-    updateEp(earnedEp);
+    updateMoney(totalProfit); //[cite: 3]
+    updateXp(earnedXp); //[cite: 3]
+    updateEp(earnedEp); //[cite: 3]
 
-    document.getElementById('m-title').innerText = `${currentCustomer.name} - Teşhis Sonucu`;
+    document.getElementById('m-title').innerText = `${currentCustomer.name} - Teşhis Sonucu`; //[cite: 3]
     
-    let scoreColorClass = isPerfectHeal ? "color: var(--success-color);" : "color: var(--danger-color);";
+    let scoreColorClass = isPerfectHeal ? "color: var(--success-color);" : "color: var(--danger-color);"; //[cite: 3]
     
     document.getElementById('m-desc').innerHTML = `
         Satılan ilaçlar başarıyla teslim edildi. Eczanenize <strong>+$${totalProfit}</strong> bütçe eklendi.<br><br>
         <strong>Kazanılan Deneyim:</strong> <span style="color: #a855f7; font-weight: bold;">+${earnedXp} XP</span><br>
         <strong>Eczane Puanı Etkisi:</strong> <span style="${scoreColorClass} font-weight: bold;">${earnedEp > 0 ? "+" + earnedEp : earnedEp} EP</span>
-    `;
+    `; //[cite: 3]
     
-    document.getElementById('m-list').innerHTML = reportHTML;
-    document.getElementById('resultModal').style.display = 'flex';
+    document.getElementById('m-list').innerHTML = reportHTML; //[cite: 3]
+    document.getElementById('resultModal').style.display = 'flex'; //[cite: 3]
 
-    customerPanel.style.borderColor = "var(--success-color)";
+    customerPanel.style.borderColor = "var(--success-color)"; //[cite: 3]
 
-    dayServedCount++;
-    currentCustomerIndex++;
-    cart = [];
-    renderCart();
+    dayServedCount++; //[cite: 3]
+    currentCustomerIndex++; //[cite: 3]
+    cart = []; //[cite: 3]
+    
+    // === HATA GİDERME EKLEMESİ ===
+    // Stok azaldıktan sonra dükkan arayüzünü güncelleyerek yeni stok miktarını ekrana yansıtıyoruz.
+    initShopMedicines(); 
+    
+    renderCart(); //[cite: 3]
 }
 
 function closeModal() {
