@@ -290,7 +290,36 @@ function startSystemClock() {
     
     enterEmptyWaitState(); // İlk olarak 10 saniyelik boş bekleme süresine girilsin.
 
-    mainClockInterval = setInterval(systemClockTick, 1000);
+    mainClockInterval = setInterval(() => {
+        if(isWarningActive || document.getElementById('resultModal').style.display === 'flex' || systemState === 'DAY_END') return;
+
+        timeRemaining--;
+        updateTimerBarUI();
+
+        if (timeRemaining <= 0) {
+            if (systemState === 'EMPTY_WAIT') {
+                if (dayServedCount >= dailyLimit) {
+                    triggerDayEndState();
+                } else {
+                    enterCustomerActiveState();
+                }
+            } else if (systemState === 'CUSTOMER_ACTIVE') {
+                dayServedCount++;
+                currentCustomerIndex++;
+                cart = [];
+                renderCart();
+                
+                // ESKİ: customers.length -> YENİ: activeDayCustomers.length
+                if (currentCustomerIndex >= activeDayCustomers.length) {
+                    triggerGameOverState();
+                } else if (dayServedCount >= dailyLimit) {
+                    triggerDayEndState();
+                } else {
+                    enterEmptyWaitState();
+                }
+            }
+        }
+    }, 1000);
 }
 
 function systemClockTick() {
@@ -936,7 +965,6 @@ window.confirmPrescription = confirmPrescription;
 window.closeModal = closeModal;
 window.switchHandbookTab = switchHandbookTab;
 window.renderHandbook = renderHandbook;
-window.updateCustomerPatienceTime = updateCustomerPatienceTime;
 window.progressToNextDay = progressToNextDay;
 window.handleMoneyClick = handleMoneyClick;
 window.switchPhoneApp = switchPhoneApp;
