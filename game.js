@@ -378,13 +378,26 @@ function triggerDayEndState() {
 function progressToNextDay() {
     currentDayNumber++;
     dayServedCount = 0;
+    gameStarted = false; // Telefonu yeniden kilitlemek için state sıfırlanır
     
-    // YENİ GÜNÜN HAZIRLIĞI: 
-    // Bir sonraki günün 5 rastgele hastasını seçip indeksi sıfırlıyoruz
+    // Bir sonraki günün 5 rastgele hastasını seç
     generateRandomCustomersForDay(); 
     
-    // Şimdi saati ve boş zaman periyodunu temiz bir şekilde başlatabiliriz
-    startSystemClock(); 
+    // Kilit ekranını tekrar görünür yap, el kitabını gizle
+    document.getElementById('lockScreenArea').style.display = 'flex';
+    document.getElementById('handbookArea').style.display = 'none';
+    
+    // Yeni günün bildirimlerini kilit ekranına yaz
+    updateLockScreenNotification();
+    
+    // Kilit ekranı saatini de güncelleyebilirsiniz (Örn: sabah 08:00)
+    document.getElementById('lockScreenClock').innerText = "08:00";
+    
+    // Saat sayacını sıfırla ama kilit açılana kadar (startDay tetiklenene kadar) çalıştırma
+    if(mainClockInterval) clearInterval(mainClockInterval);
+    document.getElementById('c-prescription-code').innerText = "--";
+    document.getElementById('customerOverlay').style.display = 'flex';
+    document.getElementById('customerOverlay').innerHTML = `<div class="customer-arrival-text">Günü başlatmanız bekleniyor... Müşteriler yolda.</div>`;
 }
 
 function triggerGameOverState() {
@@ -413,20 +426,17 @@ function updateTimerBarUI() {
 }
 
 function startDay() {
-    if (gameStarted) return; // Çift tıklama koruması
+    if (gameStarted) return; 
     gameStarted = true;
     
-    document.getElementById('guideText').style.display = 'none';
-    document.getElementById('startBtn').style.display = 'none';
+    // Kilit ekranını gizle, el kitabını göster
+    document.getElementById('lockScreenArea').style.display = 'none';
     document.getElementById('handbookArea').style.display = 'flex';
-    
-    // Her gün başında ana listeden rastgele müşteriler seçiyoruz
-    generateRandomCustomersForDay();
     
     buildHandbookFilters();
     renderHandbook();
     
-    // Günü doğrudan boş zaman ile başlatıyoruz (10 saniye bekleme)
+    // Süre sayacını ve hasta döngüsünü başlat
     startSystemClock();
 }
 
@@ -930,6 +940,23 @@ function verifyNabizCode() {
     }
 }
 
+function updateLockScreenNotification() {
+    const listElement = document.getElementById('lockScreenDiseaseList');
+    if (!listElement) return;
+    
+    listElement.innerHTML = '';
+    
+    activeDayCustomers.forEach(customer => {
+        const diseaseObj = diseases.find(d => d.id === customer.disease);
+        const diseaseName = diseaseObj ? diseaseObj.name : "Bilinmeyen Rahatsızlık";
+        
+        const li = document.createElement('li');
+        li.style.marginBottom = "4px";
+        li.innerText = diseaseName;
+        listElement.appendChild(li);
+    });
+}
+
 // Global HTML olay bağlantıları
 window.startDay = startDay;
 window.switchToDepot = switchToDepot;
@@ -950,4 +977,8 @@ window.verifyNabizCode = verifyNabizCode;
 document.addEventListener("DOMContentLoaded", () => {
     initShopMedicines();
     initDepotMedicines();
+    
+    // Oyun ilk açıldığında ilk günün hastalarını seçip kilit ekranına yazdırıyoruz
+    generateRandomCustomersForDay();
+    updateLockScreenNotification();
 });
