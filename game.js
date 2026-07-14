@@ -236,14 +236,16 @@ function startDay() {
     gameStarted = true;
     
     // Kilit ekranını gizle, el kitabını göster
-    document.getElementById('lockScreenArea').style.style.setProperty('display', 'none', 'important');
-    document.getElementById('lockScreenArea').style.display = 'none';
+    const lockArea = document.getElementById('lockScreenArea');
+    if (lockArea) {
+        lockArea.style.setProperty('display', 'none', 'important');
+    }
     document.getElementById('handbookArea').style.display = 'flex';
     
     // Uygulama sekmelerini göster
     const switcher = document.getElementById('appSwitcherTabs');
     if (switcher) {
-        switcher.style.display = 'flex';
+        switcher.style.setProperty('display', 'flex', 'important');
     }
     
     buildHandbookFilters();
@@ -977,40 +979,6 @@ function handleDepotConfirm() {
     // Arayüzleri yenile
     initDepotMedicines();
     initShopMedicines();
-}
-
-// Teslimat Motorunu Başlatan Fonksiyon
-function startDeliveryTimer() {
-    if (deliveryTimerInterval) return; // Zaten çalışıyorsa tekrar tetikleme
-
-    deliveryTimerInterval = setInterval(() => {
-        if (pendingOrders.length === 0) {
-            clearInterval(deliveryTimerInterval);
-            deliveryTimerInterval = null;
-            return;
-        }
-
-        // Kalan süreleri birer saniye azalt
-        pendingOrders.forEach(order => {
-            order.timeLeft--;
-        });
-
-        // Süresi biten siparişleri envantere ekle
-        const completedOrders = pendingOrders.filter(order => order.timeLeft <= 0);
-        completedOrders.forEach(order => {
-            const med = medicines.find(m => m.id === order.id);
-            if (med) {
-                med.count += order.quantity; // Stokta artık aktif!
-            }
-        });
-
-        // Tamamlananları bekleyenler listesinden temizle
-        pendingOrders = pendingOrders.filter(order => order.timeLeft > 0);
-
-        // UI'daki sayacı ve kartları her saniye güncelle
-        initDepotMedicines();
-        initShopMedicines();
-    }, 1000);
 }
 
 function handleMoneyClick() {
