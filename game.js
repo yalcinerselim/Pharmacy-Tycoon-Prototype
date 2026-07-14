@@ -305,14 +305,6 @@ function systemClockTick() {
 }
 
 function enterEmptyWaitState() {
-    if (currentCustomerIndex >= activeDayCustomers.length) {
-        if (currentDayNumber >= totalDaysLimit) {
-            triggerGameOverState();
-        } else {
-            triggerDayEndState();
-        }
-        return;
-    }
     systemState = 'EMPTY_WAIT';
     timeRemaining = 10;
     document.getElementById('c-prescription-code').innerText = "--";
@@ -397,13 +389,13 @@ function progressToNextDay() {
 
 function triggerGameOverState() {
     systemState = 'GAME_OVER';
-    clearInterval(mainClockInterval); //[cite: 12]
-    const overlay = document.getElementById('customerOverlay'); //[cite: 12]
+    if(mainClockInterval) clearInterval(mainClockInterval);
+    const overlay = document.getElementById('customerOverlay');
     if (overlay) {
-        overlay.style.display = 'flex'; //[cite: 12]
+        overlay.style.display = 'flex';
         overlay.innerHTML = `
             <div class="customer-arrival-text" style="color: var(--success-color); font-size:1.3rem; line-height: 1.6;">
-                Tebrikler Eczacı Alperen!<br>
+                Tebrikler Eczacı!<br>
                 <span style="font-size:0.95rem; color:white; font-weight: normal;">
                     4 gün boyunca 20 hastanın tamamına başarıyla hizmet verdin ve prototipi tamamladın!
                 </span>
@@ -411,6 +403,7 @@ function triggerGameOverState() {
         `;
     }
 }
+
 function updateTimerBarUI() {
     const bar = document.getElementById('timerBar');
     if (!bar) return;
@@ -462,14 +455,12 @@ function generateRandomCustomersForDay() {
 function handleCustomerTimeout() {
     const currentCustomer = activeDayCustomers[currentCustomerIndex];
     
-    // Süre bitiminde kazanılan/kaybedilen puanlar
     const earnedXp = 0;
     const earnedEp = -10;
     
     updateXp(earnedXp);
     updateEp(earnedEp);
 
-    // Pop-up Bilgilendirmesi
     document.getElementById('m-title').innerText = `${currentCustomer.name} Eczaneyi Terk Etti!`;
     document.getElementById('m-desc').innerHTML = `
         <span style="color: var(--danger-color); font-weight: bold;">Müşteri işlem süresi bittiği için hizmet alamadan ayrıldı.</span><br><br>
@@ -477,7 +468,6 @@ function handleCustomerTimeout() {
         <strong>Eczane Puanı Etkisi:</strong> <span style="color: var(--danger-color); font-weight: bold;">${earnedEp} EP</span>
     `;
     
-    // Semptomların hiçbiri iyileştirilemedi olarak listeleniyor
     let reportHTML = "";
     currentCustomer.symptomsList.forEach(symptom => {
         const turkishSymptomName = symptomNamesMap[symptom] || symptom;
@@ -487,25 +477,13 @@ function handleCustomerTimeout() {
     document.getElementById('m-list').innerHTML = reportHTML;
     document.getElementById('resultModal').style.display = 'flex';
 
-    // Arka planı kırmızı ton yaparak uyaralım
     document.getElementById('customerPanel').style.borderColor = "var(--danger-color)";
 
-    // Sıradaki hastaya hazırlık işlemleri
+    // Sayaçları güncelle
     dayServedCount++;
     currentCustomerIndex++;
     cart = [];
     renderCart();
-
-    // Müşteri süresi bittiğinde de günün veya oyunun bitip bitmediğini denetle
-    if (currentCustomerIndex >= activeDayCustomers.length || dayServedCount >= dailyLimit) {
-        if (currentDayNumber >= totalDaysLimit) {
-            triggerGameOverState();
-        } else {
-            triggerDayEndState();
-        }
-    } else {
-        enterEmptyWaitState();
-    }
 }
 
 function switchToDepot() {
@@ -721,25 +699,20 @@ function handleShopConfirm() {
 }
 
 function closeModal() {
-    document.getElementById('resultModal').style.display = 'none'; //[cite: 12]
-    document.getElementById('customerPanel').style.borderColor = "var(--border-color)"; //[cite: 12]
-    initShopMedicines(); //[cite: 12]
+    document.getElementById('resultModal').style.display = 'none';
+    document.getElementById('customerPanel').style.borderColor = "var(--border-color)";
+    initShopMedicines();
     
-    if (currentCustomerIndex >= activeDayCustomers.length) {
-        // Gün bittiğinde toplam gün sınırına ulaştık mı kontrol ediyoruz
-        if (currentDayNumber >= totalDaysLimit) {
-            triggerGameOverState();
-        } else {
-            triggerDayEndState();
-        }
-    } else if (dayServedCount >= dailyLimit) {
+    // Günlük limit doldu mu kontrol et (5 hasta)
+    if (dayServedCount >= dailyLimit) {
+        // Eğer 4. günün sonundaysak oyunu bitir
         if (currentDayNumber >= totalDaysLimit) {
             triggerGameOverState();
         } else {
             triggerDayEndState();
         }
     } else {
-        enterEmptyWaitState(); //[cite: 12]
+        enterEmptyWaitState();
     }
 }
 
