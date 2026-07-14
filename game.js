@@ -131,6 +131,9 @@ let ep = 0;
 let gameStarted = false;
 let isNabizVerified = false; 
 
+let pendingOrders = []; // Yoldaki siparişleri tutacak dizi
+let deliveryTimerInterval = null; // Teslimat sayacı için interval
+
 let currentShopFilter = 'HEPSİ';
 let currentDepotFilter = 'HEPSİ';
 let currentMode = 'SHOP'; 
@@ -270,18 +273,30 @@ function cleanIdToNoZero(idStr) {
     return cleanTire.replace(/^([A-Z]+)0+(\d+)/, '$1$2');
 }
 
+// Dükkan (Raf) Arayüzünü Çizen Fonksiyon
 function initShopMedicines() {
     const grid = document.getElementById('medGrid');
     if (!grid) return;
     grid.innerHTML = '';
+
+    // Aktif stoktaki ilaçları filtrele
     let filtered = medicines.filter(m => m.count > 0);
     if (currentShopFilter !== 'HEPSİ') {
         filtered = filtered.filter(m => m.group === currentShopFilter);
     }
-    if (filtered.length === 0) {
+
+    // Yolda olan (teslimat bekleyen) ilaçları filtrele
+    let activePending = pendingOrders.filter(o => {
+        const med = medicines.find(m => m.id === o.id);
+        return med && (currentShopFilter === 'HEPSİ' || med.group === currentShopFilter);
+    });
+
+    if (filtered.length === 0 && activePending.length === 0) {
         grid.innerHTML = `<div class="empty-shop-msg">Raflar boş. Depodan ürün satın alın.</div>`;
         return;
     }
+
+    // Mevcut stoktaki aktif ilaçları kart olarak bas
     filtered.forEach(med => {
         const card = document.createElement('div');
         card.className = 'med-card';
@@ -304,8 +319,33 @@ function initShopMedicines() {
         `;
         grid.appendChild(card);
     });
+
+    // Yolda olan (henüz stokta olmayan) ilaçları pasif ve "Yolda" kartı olarak bas
+    activePending.forEach(order => {
+        const med = medicines.find(m => m.id === order.id);
+        if (!med) return;
+
+        const card = document.createElement('div');
+        card.className = 'med-card';
+        card.style.opacity = '0.5';
+        card.style.cursor = 'not-allowed';
+        card.style.border = '1px dashed var(--warning-color)';
+        
+        card.innerHTML = `
+            <div class="med-header">
+                <div class="med-info"><h4>${med.name} (Yolda)</h4></div>
+                <span class="med-tag" style="background: rgba(234, 179, 8, 0.2); color: var(--warning-color);">${med.group}</span>
+            </div>
+            <div class="prices-row">
+                <span class="price-sell" style="color: var(--warning-color); font-weight: bold;">⏳ Teslimata: ${order.timeLeft}sn</span>
+                <span class="stock-tag" style="background: rgba(234, 179, 8, 0.2); color: var(--warning-color);">Sipariş: ${order.quantity} ad.</span>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
 }
 
+// Depo (Satın Alma) Arayüzünü Çizen Fonksiyon
 function initDepotMedicines() {
     const grid = document.getElementById('depotMedGrid');
     if (!grid) return;
@@ -320,6 +360,18 @@ function initDepotMedicines() {
         const turkishSymptoms = med.symptoms.map(s => symptomNamesMap[s] || s).join(', ');
         const compatibilityNames = med.compatibility.map(ageId => ageGroupsMap[ageId] || ageId).join(', ');
 
+        // Bu ilaca ait şu an yolda olan toplam sipariş miktarı ve en yakın teslimat süresi var mı?
+        const ordersForThisMed = pendingOrders.filter(o => o.id === med.id);
+        const totalPendingQty = ordersForThisMed.reduce((sum, o) => sum + o.quantity, 0);
+        const nearestDelivery = ordersForThisMed.length > 0 ? Math.min(...ordersForThisMed.map(o => o.timeLeft)) : null;
+
+        let deliveryBadge = '';
+        if (totalPendingQty > 0) {
+            deliveryBadge = `<div style="font-size:0.75rem; color: var(--warning-color); font-weight:bold; margin-top: 4px; border-top: 1px dashed rgba(234,179,8,0.2); padding-top:4px;">
+                🚚 ${totalPendingQty} adet yolda! En yakın teslimat: ${nearestDelivery}sn
+            </div>`;
+        }
+
         card.innerHTML = `
             <div class="med-header">
                 <div class="med-info"><h4>${med.name}</h4></div>
@@ -331,11 +383,11 @@ function initDepotMedicines() {
             </div>
             <div class="med-compatibility"><strong>Tedavi:</strong> ${turkishSymptoms}</div>
             <div class="med-compatibility"><strong>Uygunluk:</strong> ${compatibilityNames}</div>
+            ${deliveryBadge}
         `;
         grid.appendChild(card);
     });
 }
-
 function startSystemClock() {
     if(mainClockInterval) clearInterval(mainClockInterval);
     enterEmptyWaitState(); 
@@ -343,22 +395,48 @@ function startSystemClock() {
 }
 
 function systemClockTick() {
-    if(isWarningActive || document.getElementById('resultModal').style.display === 'flex' || systemState === 'DAY_END') return;
+    // Oyun duraklatılmışsa, modal açıkken veya gün bittiğinde zaman AKMAZ, dolayısıyla teslimat da DURUR
+    if(isWarningActive || document.getElementById('resultModal').style.display === 'flex' || systemState === 'DAY_END') return; //[cite: 5]
 
-    timeRemaining--;
-    updateTimerBarUI();
+    timeRemaining--; //[cite: 5]
+    updateTimerBarUI(); //[cite: 5]
 
-    if (timeRemaining <= 0) {
-        if (systemState === 'EMPTY_WAIT') {
-            if (dayServedCount >= dailyLimit) {
-                triggerDayEndState();
-            } else {
-                enterCustomerActiveState();
+    // === ENTEGRE TESLİMAT SİSTEMİ ===
+    // Sadece oyun süresi akarken teslimat sürelerini düşür
+    if (pendingOrders.length > 0) {
+        pendingOrders.forEach(order => {
+            order.timeLeft--;
+        });
+
+        // Süresi biten (0 veya daha az kalan) siparişleri depoya/rafa ekle
+        const completedOrders = pendingOrders.filter(order => order.timeLeft <= 0);
+        completedOrders.forEach(order => {
+            const med = medicines.find(m => m.id === order.id); //[cite: 5]
+            if (med) {
+                med.count += order.quantity; // Stokta artık aktif!
             }
-        } else if (systemState === 'CUSTOMER_ACTIVE') {
-            handleCustomerTimeout();
-        }
+        });
+
+        // Tamamlananları bekleyenler listesinden temizle
+        pendingOrders = pendingOrders.filter(order => order.timeLeft > 0);
+
+        // Arayüzdeki kartları ve kalan süreleri her saniye güncelle
+        initDepotMedicines();
+        initShopMedicines();
     }
+    // ================================
+
+    if (timeRemaining <= 0) { //[cite: 5]
+        if (systemState === 'EMPTY_WAIT') { //[cite: 5]
+            if (dayServedCount >= dailyLimit) { //[cite: 5]
+                triggerDayEndState(); //[cite: 5]
+            } else { //[cite: 5]
+                enterCustomerActiveState(); //[cite: 5]
+            } //[cite: 5]
+        } else if (systemState === 'CUSTOMER_ACTIVE') { //[cite: 5]
+            handleCustomerTimeout(); //[cite: 5]
+        } //[cite: 5]
+    } //[cite: 5]
 }
 
 function enterEmptyWaitState() {
@@ -545,36 +623,61 @@ function filterDepotMedicines(group, btn) {
     initDepotMedicines();
 }
 
+// Sepete ekleme fonksiyonu
 function addToCart(medId) {
     if (isWarningActive || systemState === 'DAY_END' || systemState === 'GAME_OVER') return;
 
+    const med = medicines.find(m => m.id === medId);
+    if (!med) return;
+
     if (currentMode === 'SHOP') {
-        if(!gameStarted || systemState !== 'CUSTOMER_ACTIVE') return; 
+        if (!gameStarted || systemState !== 'CUSTOMER_ACTIVE') return; 
         
-        if(!isNabizVerified) {
+        if (!isNabizVerified) {
             alert("⚠️ Lütfen önce Nabız uygulamasından reçete kodunu başarılı bir şekilde çözümleyin!");
             return;
         }
 
-        const med = medicines.find(m => m.id === medId);
         if (med.count <= 0) return;
         if (cart.length >= 2) return;
         if (cart.some(item => item.id === medId)) return;
-        cart.push(med);
+        
+        // Müşteri sepetine ekleme (Adet her zaman 1)
+        cart.push({ ...med, quantity: 1 });
     } else {
-        const med = medicines.find(m => m.id === medId);
-        if (cart.some(item => item.id === medId)) return; 
-        cart.push(med);
+        // Depo sepetine ekleme (Çoklu Alım)
+        const existingItem = cart.find(item => item.id === medId);
+        if (existingItem) {
+            existingItem.quantity += 1; // Zaten sepette varsa miktarını artır
+        } else {
+            cart.push({ ...med, quantity: 1 }); // Yoksa yeni ekle
+        }
     }
     renderCart();
 }
 
+// Sepetten çıkarma fonksiyonu
 function removeFromCart(medId) {
     if (isWarningActive) return;
     cart = cart.filter(item => item.id !== medId);
     renderCart();
 }
 
+// Sepetteki adet miktarını doğrudan değiştirmek için (Depo moduna özel)
+function updateCartItemQuantity(medId, value) {
+    const item = cart.find(i => i.id === medId);
+    if (!item) return;
+    
+    const qty = parseInt(value);
+    if (qty <= 0 || isNaN(qty)) {
+        removeFromCart(medId);
+    } else {
+        item.quantity = qty;
+    }
+    renderCart();
+}
+
+// Dinamik Sepeti Çizen Fonksiyon
 function renderCart() {
     const cartList = document.getElementById('cartList');
     const cartEmpty = document.getElementById('cartEmpty');
@@ -583,11 +686,12 @@ function renderCart() {
 
     if (!cartList || !cartEmpty || !submitBtn || !titleElement) return;
 
+    // Önceki elemanları temizle (boş uyarısı hariç)
     const items = cartList.querySelectorAll('.cart-item');
     items.forEach(item => item.remove());
 
     if (currentMode === 'DEPOT') {
-        let totalCost = cart.reduce((sum, item) => sum + item.buyPrice, 0);
+        let totalCost = cart.reduce((sum, item) => sum + (item.buyPrice * item.quantity), 0);
         titleElement.innerText = `Toptan Alım Sepeti (Toplam Tutar: $${totalCost})`;
     } else {
         titleElement.innerText = "Sepet (Müşteri Reçetesi)";
@@ -609,10 +713,29 @@ function renderCart() {
         cart.forEach(item => {
             const itemDiv = document.createElement('div');
             itemDiv.className = 'cart-item';
-            itemDiv.innerHTML = `
-                <span>${item.name} ${currentMode === 'DEPOT' ? `($${item.buyPrice})` : ''}</span>
-                <span class="cart-item-remove" onclick="removeFromCart('${item.id}')">×</span>
-            `;
+            itemDiv.style.display = 'flex';
+            itemDiv.style.justifyContent = 'space-between';
+            itemDiv.style.alignItems = 'center';
+            itemDiv.style.width = '100%';
+
+            if (currentMode === 'DEPOT') {
+                itemDiv.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span>${item.name} ($${item.buyPrice})</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <input type="number" min="1" value="${item.quantity}" 
+                               style="width: 50px; background: #262b37; border: 1px solid #3b82f6; color: white; border-radius: 4px; padding: 2px 4px; text-align: center; font-weight: bold;"
+                               onchange="updateCartItemQuantity('${item.id}', this.value)">
+                        <span class="cart-item-remove" onclick="removeFromCart('${item.id}')">×</span>
+                    </div>
+                `;
+            } else {
+                itemDiv.innerHTML = `
+                    <span>${item.name}</span>
+                    <span class="cart-item-remove" onclick="removeFromCart('${item.id}')">×</span>
+                `;
+            }
             cartList.appendChild(itemDiv);
         });
     }
@@ -826,22 +949,68 @@ function renderHandbook() {
     }
 }
 
+// Depo Satın Alma Onay Fonksiyonu
 function handleDepotConfirm() {
-    let totalCost = cart.reduce((sum, item) => sum + item.buyPrice, 0);
+    let totalCost = cart.reduce((sum, item) => sum + (item.buyPrice * item.quantity), 0);
     if (money < totalCost) {
         alert("Yetersiz Bütçe!");
         return;
     }
+    
+    // Parayı düş
     updateMoney(-totalCost);
+    
+    // Satın alınan ürünleri yoldaki siparişler listesine ekle
     cart.forEach(item => {
-        const med = medicines.find(m => m.id === item.id);
-        med.count += 1;
+        pendingOrders.push({
+            id: item.id,
+            name: item.name,
+            quantity: item.quantity,
+            timeLeft: 30 // 30 saniye teslimat süresi
+        });
     });
-    alert(`Satın alım başarılı!`);
+
+    alert(`Siparişleriniz verildi! İlaçların teslimat süresi 30 saniyedir.`);
     cart = [];
     renderCart();
+    
+    // Arayüzleri yenile
     initDepotMedicines();
     initShopMedicines();
+}
+
+// Teslimat Motorunu Başlatan Fonksiyon
+function startDeliveryTimer() {
+    if (deliveryTimerInterval) return; // Zaten çalışıyorsa tekrar tetikleme
+
+    deliveryTimerInterval = setInterval(() => {
+        if (pendingOrders.length === 0) {
+            clearInterval(deliveryTimerInterval);
+            deliveryTimerInterval = null;
+            return;
+        }
+
+        // Kalan süreleri birer saniye azalt
+        pendingOrders.forEach(order => {
+            order.timeLeft--;
+        });
+
+        // Süresi biten siparişleri envantere ekle
+        const completedOrders = pendingOrders.filter(order => order.timeLeft <= 0);
+        completedOrders.forEach(order => {
+            const med = medicines.find(m => m.id === order.id);
+            if (med) {
+                med.count += order.quantity; // Stokta artık aktif!
+            }
+        });
+
+        // Tamamlananları bekleyenler listesinden temizle
+        pendingOrders = pendingOrders.filter(order => order.timeLeft > 0);
+
+        // UI'daki sayacı ve kartları her saniye güncelle
+        initDepotMedicines();
+        initShopMedicines();
+    }, 1000);
 }
 
 function handleMoneyClick() {
@@ -961,6 +1130,7 @@ window.switchPhoneApp = switchPhoneApp;
 window.verifyNabizCode = verifyNabizCode;
 window.updateLockScreenNotification = updateLockScreenNotification;
 window.generateRandomCustomersForDay = generateRandomCustomersForDay;
+window.updateCartItemQuantity = updateCartItemQuantity;
 
 // Uygulama yüklenme döngüsü
 document.addEventListener("DOMContentLoaded", () => {
