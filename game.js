@@ -235,14 +235,19 @@ function startDay() {
     if (gameStarted) return; 
     gameStarted = true;
     
-    // Kilit ekranını gizle, el kitabını göster
+    // Kilit ekranını gizle
     const lockArea = document.getElementById('lockScreenArea');
     if (lockArea) {
         lockArea.style.setProperty('display', 'none', 'important');
     }
-    document.getElementById('handbookArea').style.display = 'flex';
     
-    // Uygulama sekmelerini göster
+    // El kitabını göster
+    const handbookArea = document.getElementById('handbookArea');
+    if (handbookArea) {
+        handbookArea.style.setProperty('display', 'flex', 'important');
+    }
+    
+    // Uygulama sekmelerini göster (CSS !important kuralını ezer)
     const switcher = document.getElementById('appSwitcherTabs');
     if (switcher) {
         switcher.style.setProperty('display', 'flex', 'important');
@@ -519,11 +524,22 @@ function progressToNextDay() {
     
     generateRandomCustomersForDay(); 
     
-    document.getElementById('lockScreenArea').style.display = 'flex';
-    document.getElementById('handbookArea').style.display = 'none';
+    // Kilit ekranını tekrar görünür yap, el kitabını gizle
+    const lockArea = document.getElementById('lockScreenArea');
+    if (lockArea) {
+        lockArea.style.setProperty('display', 'flex', 'important');
+    }
     
+    const handbookArea = document.getElementById('handbookArea');
+    if (handbookArea) {
+        handbookArea.style.setProperty('display', 'none', 'important');
+    }
+    
+    // Uygulama sekmelerini tekrar gizle
     const switcher = document.getElementById('appSwitcherTabs');
-    if (switcher) switcher.style.display = 'none';
+    if (switcher) {
+        switcher.style.setProperty('display', 'none', 'important');
+    }
     
     updateLockScreenNotification();
     
