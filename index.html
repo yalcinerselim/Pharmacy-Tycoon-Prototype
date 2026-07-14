@@ -40,8 +40,8 @@
                         </div>
                     </div>
 
-                    <!-- Uygulama Seçim Menüsü (Hızlı Geçiş Butonları) -->
-                    <div class="app-switcher-tabs" style="display: flex; gap: 4px; margin-bottom: 12px; z-index: 10;">
+                    <!-- Uygulama Seçim Menüsü (Başlangıçta gizli olacak, kilit açılınca gösterilecek) -->
+                    <div id="appSwitcherTabs" class="app-switcher-tabs" style="display: none; gap: 4px; margin-bottom: 12px; z-index: 10;">
                         <button id="appBtnHandbook" class="app-tab-btn active" onclick="switchPhoneApp('HANDBOOK')">El Kitabı</button>
                         <button id="appBtnNabiz" class="app-tab-btn" onclick="switchPhoneApp('NABIZ')">Nabız</button>
                     </div>
@@ -75,12 +75,12 @@
                                 </div>
                             </div>
                     
-                            <!-- Parmak İzi Efektli Günü Başlat Butonu -->
+                            <!-- Kilit Ekranı Buton Alanı -->
                             <div style="width: 100%; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px;">
                                 <button id="startBtn" class="start-btn" onclick="startDay()" style="display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 50px; padding: 14px 20px;">
-                                    <span style="font-size: 1.2rem;">🔑</span> Günü Başlat (Parmak İzi)
+                                    🔑 Günü Başlat
                                 </button>
-                                <span style="font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.5px;">Giriş yapmak için dokunun</span>
+                                <span style="font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.5px;">Eczaneyi açmak için dokunun</span>
                             </div>
                         </div>
                     
