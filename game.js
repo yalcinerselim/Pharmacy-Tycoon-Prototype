@@ -235,21 +235,21 @@ function startDay() {
     if (gameStarted) return; 
     gameStarted = true;
     
-    // Kilit ekranını gizle (Tek bir .style ile güvenli erişim)
+    // Kilit ekranını gizle (Elemanın varlığı kontrol edilerek güvenli erişim sağlanıyor)
     const lockArea = document.getElementById('lockScreenArea');
-    if (lockArea) {
+    if (lockArea && lockArea.style) {
         lockArea.style.setProperty('display', 'none', 'important');
     }
     
     // El kitabını göster
     const handbookArea = document.getElementById('handbookArea');
-    if (handbookArea) {
+    if (handbookArea && handbookArea.style) {
         handbookArea.style.setProperty('display', 'flex', 'important');
     }
     
     // Uygulama sekmelerini göster (CSS !important kuralını ezer)
     const switcher = document.getElementById('appSwitcherTabs');
-    if (switcher) {
+    if (switcher && switcher.style) {
         switcher.style.setProperty('display', 'flex', 'important');
     }
     
