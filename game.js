@@ -146,24 +146,6 @@ let currentDayNumber = 1;
 let dayServedCount = 0; 
 const dailyLimit = 5;
 
-// Global HTML olay bağlantıları
-window.startDay = startDay;
-window.switchToDepot = switchToDepot;
-window.switchToShop = switchToShop;
-window.filterShopMedicines = filterShopMedicines;
-window.filterDepotMedicines = filterDepotMedicines;
-window.addToCart = addToCart;
-window.removeFromCart = removeFromCart;
-window.confirmPrescription = confirmPrescription;
-window.closeModal = closeModal;
-window.switchHandbookTab = switchHandbookTab;
-window.renderHandbook = renderHandbook;
-window.updateCustomerPatienceTime = updateCustomerPatienceTime;
-window.progressToNextDay = progressToNextDay;
-window.handleMoneyClick = handleMoneyClick;
-window.switchPhoneApp = switchPhoneApp;
-window.verifyNabizCode = verifyNabizCode;
-
 // === 4. SKOR VE BİRİM GÜNCELLEME FONKSİYONLARI ===
 
 function updateMoney(amount) {
@@ -921,6 +903,24 @@ function verifyNabizCode() {
         alert("Girdiğiniz çözümleme verileri eşleşmedi! Lütfen kodu tekrar kontrol ediniz.");
     }
 }
+
+// Global HTML olay bağlantıları
+window.startDay = startDay;
+window.switchToDepot = switchToDepot;
+window.switchToShop = switchToShop;
+window.filterShopMedicines = filterShopMedicines;
+window.filterDepotMedicines = filterDepotMedicines;
+window.addToCart = addToCart;
+window.removeFromCart = removeFromCart;
+window.confirmPrescription = confirmPrescription;
+window.closeModal = closeModal;
+window.switchHandbookTab = switchHandbookTab;
+window.renderHandbook = renderHandbook;
+window.updateCustomerPatienceTime = updateCustomerPatienceTime;
+window.progressToNextDay = progressToNextDay;
+window.handleMoneyClick = handleMoneyClick;
+window.switchPhoneApp = switchPhoneApp;
+window.verifyNabizCode = verifyNabizCode;
 
 document.addEventListener("DOMContentLoaded", () => {
     initShopMedicines();
