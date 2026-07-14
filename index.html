@@ -30,8 +30,14 @@
                     
                     <div class="phone-top-row" style="width: 100%;">
                         <!-- Dinamik Başlık -->
-                        <div id="phoneAppTitle" class="phone-header">Eczacı El Kitabı</div>
-                        <div id="moneyDisplay" class="phone-money-display" onclick="handleMoneyClick()">$300</div>
+                        <div id="phoneAppTitle" class="phone-header" style="text-align: center; width: 100%;">Eczacı El Kitabı</div>
+                        
+                        <!-- Üçlü Gösterge Paneli -->
+                        <div class="phone-stats-container">
+                            <div id="moneyDisplay" class="stat-box money" onclick="handleMoneyClick()">$300</div>
+                            <div id="xpDisplay" class="stat-box xp">0 XP</div>
+                            <div id="epDisplay" class="stat-box ep">0 EP</div>
+                        </div>
                     </div>
 
                     <!-- Uygulama Seçim Menüsü (Hızlı Geçiş Butonları) -->
