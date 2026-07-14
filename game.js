@@ -121,7 +121,8 @@ const ageGroupsMap = {
 // === 3. OYUN GLOBAL DURUM DEĞİŞKENLERİ ===
 
 let currentCustomerIndex = 0;
-let activeDayCustomers = []; // O gün dükkana gelecek rastgele seçilen müşterilerin listesi
+let activeDayCustomers = []; 
+let playedCustomersPool = []; // Daha önceki günlerde karşılaşılmış müşterileri tutacak havuz // O gün dükkana gelecek rastgele seçilen müşterilerin listesi
 let cart = [];
 let isWarningActive = false;
 let money = 300;
@@ -146,6 +147,7 @@ let mainClockInterval = null;
 let currentDayNumber = 1;
 let dayServedCount = 0; 
 const dailyLimit = 5;
+const totalDaysLimit = 4; // Toplam oynanacak gün sınırı (4 Gün * 5 Hasta = 20 Benzersiz Hasta)
 
 // === 4. SKOR VE BİRİM GÜNCELLEME FONKSİYONLARI ===
 
@@ -380,19 +382,25 @@ function triggerDayEndState() {
 function progressToNextDay() {
     currentDayNumber++;
     dayServedCount = 0;
-    startSystemClock();
+    startSystemClock(); //[cite: 12]
 }
 
 function triggerGameOverState() {
     systemState = 'GAME_OVER';
-    clearInterval(mainClockInterval);
-    const overlay = document.getElementById('customerOverlay');
+    clearInterval(mainClockInterval); //[cite: 12]
+    const overlay = document.getElementById('customerOverlay'); //[cite: 12]
     if (overlay) {
-        overlay.style.display = 'flex';
-        overlay.innerHTML = `<div class="customer-arrival-text" style="color: var(--success-color); font-size:1.3rem;">Tebrikler!<br><span style="font-size:0.9rem; color:white;">Listedeki tüm hastaların reçeteleri işlendi. Oyun Bitti!</span></div>`;
+        overlay.style.display = 'flex'; //[cite: 12]
+        overlay.innerHTML = `
+            <div class="customer-arrival-text" style="color: var(--success-color); font-size:1.3rem; line-height: 1.6;">
+                Tebrikler Eczacı Alperen!<br>
+                <span style="font-size:0.95rem; color:white; font-weight: normal;">
+                    4 gün boyunca 20 hastanın tamamına başarıyla hizmet verdin ve prototipi tamamladın!
+                </span>
+            </div>
+        `;
     }
 }
-
 function updateTimerBarUI() {
     const bar = document.getElementById('timerBar');
     if (!bar) return;
@@ -424,15 +432,19 @@ function generateRandomCustomersForDay() {
     activeDayCustomers = [];
     currentCustomerIndex = 0; // Her gün başında indeks sıfırlanır
     
-    // Olası müşteri havuzunu kopyalıyoruz
-    let pool = [...customers];
+    // Henüz oynanmamış müşterileri filtreleyip yeni bir aday havuzu oluşturuyoruz
+    let availablePool = customers.filter(c => !playedCustomersPool.some(played => played.id === c.id));
     
     // Günlük limit kadar rastgele çekim yapıyoruz
     for (let i = 0; i < dailyLimit; i++) {
-        if (pool.length === 0) break; // Havuzda eleman kalmadıysa dur
-        const randomIndex = Math.floor(Math.random() * pool.length);
-        activeDayCustomers.push(pool[randomIndex]);
-        pool.splice(randomIndex, 1); // Seçilen müşteriyi havuzdan çıkarıyoruz (aynı gün tekrar gelmesin)
+        if (availablePool.length === 0) break; 
+        const randomIndex = Math.floor(Math.random() * availablePool.length);
+        const selectedCustomer = availablePool[randomIndex];
+        
+        activeDayCustomers.push(selectedCustomer);
+        playedCustomersPool.push(selectedCustomer); // Seçilen hastayı "oynananlar" havuzuna ekliyoruz
+        
+        availablePool.splice(randomIndex, 1); // Seçimi bu günlük aday havuzundan da düşüyoruz
     }
 }
 
@@ -688,16 +700,25 @@ function handleShopConfirm() {
 }
 
 function closeModal() {
-    document.getElementById('resultModal').style.display = 'none';
-    document.getElementById('customerPanel').style.borderColor = "var(--border-color)";
-    initShopMedicines();
+    document.getElementById('resultModal').style.display = 'none'; //[cite: 12]
+    document.getElementById('customerPanel').style.borderColor = "var(--border-color)"; //[cite: 12]
+    initShopMedicines(); //[cite: 12]
     
     if (currentCustomerIndex >= activeDayCustomers.length) {
-        triggerGameOverState();
+        // Gün bittiğinde toplam gün sınırına ulaştık mı kontrol ediyoruz
+        if (currentDayNumber >= totalDaysLimit) {
+            triggerGameOverState();
+        } else {
+            triggerDayEndState();
+        }
     } else if (dayServedCount >= dailyLimit) {
-        triggerDayEndState();
+        if (currentDayNumber >= totalDaysLimit) {
+            triggerGameOverState();
+        } else {
+            triggerDayEndState();
+        }
     } else {
-        enterEmptyWaitState();
+        enterEmptyWaitState(); //[cite: 12]
     }
 }
 
