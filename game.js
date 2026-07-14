@@ -660,15 +660,15 @@ function addToCart(medId) {
         if (cart.length >= 2) return;
         if (cart.some(item => item.id === medId)) return;
         
-        // Müşteri sepetine ekleme (Adet her zaman 1)
-        cart.push({ ...med, quantity: 1 });
+        // Müşteri sepetine sadece id ve miktar ekliyoruz (Referans korundu!)
+        cart.push({ id: medId, quantity: 1 });
     } else {
-        // Depo sepetine ekleme (Çoklu Alım)
+        // Depo sepetine ekleme
         const existingItem = cart.find(item => item.id === medId);
         if (existingItem) {
-            existingItem.quantity += 1; // Zaten sepette varsa miktarını artır
+            existingItem.quantity += 1;
         } else {
-            cart.push({ ...med, quantity: 1 }); // Yoksa yeni ekle
+            cart.push({ id: medId, quantity: 1 });
         }
     }
     renderCart();
@@ -704,12 +704,14 @@ function renderCart() {
 
     if (!cartList || !cartEmpty || !submitBtn || !titleElement) return;
 
-    // Önceki elemanları temizle (boş uyarısı hariç)
     const items = cartList.querySelectorAll('.cart-item');
     items.forEach(item => item.remove());
 
     if (currentMode === 'DEPOT') {
-        let totalCost = cart.reduce((sum, item) => sum + (item.buyPrice * item.quantity), 0);
+        let totalCost = cart.reduce((sum, item) => {
+            const originalMed = medicines.find(m => m.id === item.id);
+            return sum + ((originalMed ? originalMed.buyPrice : 0) * item.quantity);
+        }, 0);
         titleElement.innerText = `Toptan Alım Sepeti (Toplam Tutar: $${totalCost})`;
     } else {
         titleElement.innerText = "Sepet (Müşteri Reçetesi)";
@@ -729,6 +731,10 @@ function renderCart() {
         }
 
         cart.forEach(item => {
+            // Bilgileri ekrana basabilmek için orijinal nesneyi buluyoruz
+            const originalMed = medicines.find(m => m.id === item.id);
+            if (!originalMed) return;
+
             const itemDiv = document.createElement('div');
             itemDiv.className = 'cart-item';
             itemDiv.style.display = 'flex';
@@ -739,7 +745,7 @@ function renderCart() {
             if (currentMode === 'DEPOT') {
                 itemDiv.innerHTML = `
                     <div style="display: flex; align-items: center; gap: 8px;">
-                        <span>${item.name} ($${item.buyPrice})</span>
+                        <span>${originalMed.name} ($${originalMed.buyPrice})</span>
                     </div>
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <input type="number" min="1" value="${item.quantity}" 
@@ -750,7 +756,7 @@ function renderCart() {
                 `;
             } else {
                 itemDiv.innerHTML = `
-                    <span>${item.name}</span>
+                    <span>${originalMed.name}</span>
                     <span class="cart-item-remove" onclick="removeFromCart('${item.id}')">×</span>
                 `;
             }
@@ -769,103 +775,104 @@ function confirmPrescription() {
 }
 
 function handleShopConfirm() {
-    const currentCustomer = activeDayCustomers[currentCustomerIndex]; //
-    const submitBtn = document.getElementById('submitBtn'); //[cite: 3]
-    const customerPanel = document.getElementById('customerPanel'); //[cite: 3]
+    const currentCustomer = activeDayCustomers[currentCustomerIndex];
+    const submitBtn = document.getElementById('submitBtn');
+    const customerPanel = document.getElementById('customerPanel');
 
-    const primaryMed = cart[0]; //[cite: 3]
-    const customerAge = currentCustomer.ageGroup.trim().toLowerCase(); //[cite: 3]
+    // Sepetteki ilk elemanın orijinal ilaç nesnesine ulaşıyoruz
+    const cartItem = cart[0];
+    const originalMed = medicines.find(m => m.id === cartItem.id);
+    if (!originalMed) return;
 
-    const isAgeCompatible = primaryMed.compatibility.some(ageId => {
-        const mappedAgeName = (ageGroupsMap[ageId] || "").trim().toLowerCase(); //[cite: 3]
-        return mappedAgeName === customerAge; //[cite: 3]
+    const customerAge = currentCustomer.ageGroup.trim().toLowerCase();
+
+    // Yaş uyumluluğunu orijinal nesne referansı üzerinden kontrol ediyoruz
+    const isAgeCompatible = originalMed.compatibility.some(ageId => {
+        const mappedAgeName = (ageGroupsMap[ageId] || "").trim().toLowerCase();
+        return mappedAgeName === customerAge;
     });
 
-    if (!isAgeCompatible) { //[cite: 3]
-        isWarningActive = true; //[cite: 3]
-        submitBtn.disabled = true; //[cite: 3]
-        submitBtn.classList.remove('active'); //[cite: 3]
-        submitBtn.classList.add('warning'); //[cite: 3]
-        submitBtn.innerText = "Bu müşteriye bu ilacı veremezsiniz!"; //[cite: 3]
+    if (!isAgeCompatible) {
+        isWarningActive = true;
+        submitBtn.disabled = true;
+        submitBtn.classList.remove('active');
+        submitBtn.classList.add('warning');
+        submitBtn.innerText = "Bu müşteriye bu ilacı veremezsiniz!";
         setTimeout(() => {
-            isWarningActive = false; //[cite: 3]
-            submitBtn.classList.remove('warning'); //[cite: 3]
-            submitBtn.innerText = "Onayla"; //[cite: 3]
-            renderCart(); //[cite: 3]
-        }, 5000); //[cite: 3]
-        return; //[cite: 3]
+            isWarningActive = false;
+            submitBtn.classList.remove('warning');
+            submitBtn.innerText = "Onayla";
+            renderCart();
+        }, 5000);
+        return;
     }
 
-    const customerSymptoms = currentCustomer.symptomsList; //[cite: 3]
-    let totalProfit = 0; //[cite: 3]
-    let reportHTML = ""; //[cite: 3]
+    const customerSymptoms = currentCustomer.symptomsList;
+    let totalProfit = 0;
+    let reportHTML = "";
 
     let combinedMedSymptoms = [];
-    cart.forEach(cartItem => {
-        // Orijinal medicines dizisindeki gerçek nesneyi ID'si ile buluyoruz
-        const originalMed = medicines.find(m => m.id === cartItem.id);
-        if (originalMed) {
-            originalMed.count--; // Gerçek stoktan düşüyoruz
+    cart.forEach(item => {
+        const targetMed = medicines.find(m => m.id === item.id);
+        if (targetMed) {
+            targetMed.count--; // Ana veritabanından kesin olarak düşüyor!
+            totalProfit += targetMed.price;
+            combinedMedSymptoms = combinedMedSymptoms.concat(targetMed.symptoms);
         }
-        
-        totalProfit += cartItem.price;
-        combinedMedSymptoms = combinedMedSymptoms.concat(cartItem.symptoms);
     });
-    let healedCount = 0; //[cite: 3]
+
+    let healedCount = 0;
 
     customerSymptoms.forEach(symptom => {
-        let isHealed = combinedMedSymptoms.some(mSym => mSym.toLowerCase().trim() === symptom.toLowerCase().trim()); //[cite: 3]
+        let isHealed = combinedMedSymptoms.some(mSym => mSym.toLowerCase().trim() === symptom.toLowerCase().trim());
         
         if (isHealed) {
-            healedCount++; //[cite: 3]
-            const turkishSymptomName = symptomNamesMap[symptom] || symptom; //[cite: 3]
-            reportHTML += `<li class="healed">İyileştirildi: <strong>${turkishSymptomName}</strong></li>`; //[cite: 3]
+            healedCount++;
+            const turkishSymptomName = symptomNamesMap[symptom] || symptom;
+            reportHTML += `<li class="healed">İyileştirildi: <strong>${turkishSymptomName}</strong></li>`;
         } else {
-            const turkishSymptomName = symptomNamesMap[symptom] || symptom; //[cite: 3]
-            reportHTML += `<li class="failed">İyileştirilemedi: <strong>${turkishSymptomName}</strong></li>`; //[cite: 3]
+            const turkishSymptomName = symptomNamesMap[symptom] || symptom;
+            reportHTML += `<li class="failed">İyileştirilemedi: <strong>${turkishSymptomName}</strong></li>`;
         }
     });
 
-    let earnedXp = 0; //[cite: 3]
-    let earnedEp = 0; //[cite: 3]
-    let isPerfectHeal = (healedCount === customerSymptoms.length); //[cite: 3]
+    let earnedXp = 0;
+    let earnedEp = 0;
+    let isPerfectHeal = (healedCount === customerSymptoms.length);
 
     if (isPerfectHeal) {
-        earnedXp = 10; //[cite: 3]
-        earnedEp = 5; //[cite: 3]
+        earnedXp = 10;
+        earnedEp = 5;
     } else {
-        earnedXp = 2; //[cite: 3]
-        earnedEp = -5; //[cite: 3]
+        earnedXp = 2;
+        earnedEp = -5;
     }
 
-    updateMoney(totalProfit); //[cite: 3]
-    updateXp(earnedXp); //[cite: 3]
-    updateEp(earnedEp); //[cite: 3]
+    updateMoney(totalProfit);
+    updateXp(earnedXp);
+    updateEp(earnedEp);
 
-    document.getElementById('m-title').innerText = `${currentCustomer.name} - Teşhis Sonucu`; //[cite: 3]
+    document.getElementById('m-title').innerText = `${currentCustomer.name} - Teşhis Sonucu`;
     
-    let scoreColorClass = isPerfectHeal ? "color: var(--success-color);" : "color: var(--danger-color);"; //[cite: 3]
+    let scoreColorClass = isPerfectHeal ? "color: var(--success-color);" : "color: var(--danger-color);";
     
     document.getElementById('m-desc').innerHTML = `
         Satılan ilaçlar başarıyla teslim edildi. Eczanenize <strong>+$${totalProfit}</strong> bütçe eklendi.<br><br>
         <strong>Kazanılan Deneyim:</strong> <span style="color: #a855f7; font-weight: bold;">+${earnedXp} XP</span><br>
         <strong>Eczane Puanı Etkisi:</strong> <span style="${scoreColorClass} font-weight: bold;">${earnedEp > 0 ? "+" + earnedEp : earnedEp} EP</span>
-    `; //[cite: 3]
+    `;
     
-    document.getElementById('m-list').innerHTML = reportHTML; //[cite: 3]
-    document.getElementById('resultModal').style.display = 'flex'; //[cite: 3]
+    document.getElementById('m-list').innerHTML = reportHTML;
+    document.getElementById('resultModal').style.display = 'flex';
 
-    customerPanel.style.borderColor = "var(--success-color)"; //[cite: 3]
+    customerPanel.style.borderColor = "var(--success-color)";
 
-    dayServedCount++; //[cite: 3]
-    currentCustomerIndex++; //[cite: 3]
-    cart = []; //[cite: 3]
+    dayServedCount++;
+    currentCustomerIndex++;
+    cart = [];
     
-    // === HATA GİDERME EKLEMESİ ===
-    // Stok azaldıktan sonra dükkan arayüzünü güncelleyerek yeni stok miktarını ekrana yansıtıyoruz.
-    initShopMedicines(); 
-    
-    renderCart(); //[cite: 3]
+    initShopMedicines(); // Stok değişimini ekrana hemen yansıtıyoruz
+    renderCart();
 }
 
 function closeModal() {
