@@ -378,7 +378,7 @@ function triggerDayEndState() {
 function progressToNextDay() {
     currentDayNumber++;
     dayServedCount = 0;
-    gameStarted = false; // Telefonu yeniden kilitlemek için state sıfırlanır
+    gameStarted = false; // Yeniden günü başlat butonuna basılabilmesi için sıfırlanır
     
     // Bir sonraki günün 5 rastgele hastasını seç
     generateRandomCustomersForDay(); 
@@ -386,6 +386,10 @@ function progressToNextDay() {
     // Kilit ekranını tekrar görünür yap, el kitabını gizle
     document.getElementById('lockScreenArea').style.display = 'flex';
     document.getElementById('handbookArea').style.display = 'none';
+    
+    // Uygulama sekmelerini tekrar kilitle/gizle
+    const switcher = document.getElementById('appSwitcherTabs');
+    if (switcher) switcher.style.display = 'none';
     
     // Yeni günün bildirimlerini kilit ekranına yaz
     updateLockScreenNotification();
@@ -432,6 +436,10 @@ function startDay() {
     // Kilit ekranını gizle, el kitabını göster
     document.getElementById('lockScreenArea').style.display = 'none';
     document.getElementById('handbookArea').style.display = 'flex';
+    
+    // Uygulama geçiş butonlarını telefon açılınca göster
+    const switcher = document.getElementById('appSwitcherTabs');
+    if (switcher) switcher.style.display = 'flex';
     
     buildHandbookFilters();
     renderHandbook();
@@ -946,6 +954,11 @@ function updateLockScreenNotification() {
     
     listElement.innerHTML = '';
     
+    if (activeDayCustomers.length === 0) {
+        // Eğer liste henüz seçilmediyse tekrar seçmeyi dene
+        generateRandomCustomersForDay();
+    }
+    
     activeDayCustomers.forEach(customer => {
         const diseaseObj = diseases.find(d => d.id === customer.disease);
         const diseaseName = diseaseObj ? diseaseObj.name : "Bilinmeyen Rahatsızlık";
@@ -978,7 +991,11 @@ document.addEventListener("DOMContentLoaded", () => {
     initShopMedicines();
     initDepotMedicines();
     
-    // Oyun ilk açıldığında ilk günün hastalarını seçip kilit ekranına yazdırıyoruz
+    // Rastgele müşterileri seçip arayüze basıyoruz
     generateRandomCustomersForDay();
     updateLockScreenNotification();
+    
+    // Üst bar sekmelerinin kilit ekranında gizli olduğundan emin olalım
+    const switcher = document.getElementById('appSwitcherTabs');
+    if (switcher) switcher.style.display = 'none';
 });
