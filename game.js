@@ -121,6 +121,7 @@ const ageGroupsMap = {
 // === 3. OYUN GLOBAL DURUM DEĞİŞKENLERİ ===
 
 let currentCustomerIndex = 0;
+let activeDayCustomers = []; // O gün dükkana gelecek rastgele seçilen müşterilerin listesi
 let cart = [];
 let isWarningActive = false;
 let money = 300;
@@ -313,7 +314,7 @@ function systemClockTick() {
 }
 
 function enterEmptyWaitState() {
-    if (currentCustomerIndex >= customers.length) {
+    if (currentCustomerIndex >= activeDayCustomers.length) {
         triggerGameOverState();
         return;
     }
@@ -359,7 +360,7 @@ function enterCustomerActiveState() {
         lockWarning.innerText = "⚠️ Dikkat: Nabız uygulamasında bu reçete kodunu çözümlemeden ilaç satışı yapamazsınız!";
     }
 
-    const customer = customers[currentCustomerIndex];
+    const customer = activeDayCustomers[currentCustomerIndex];
     const prescriptionCode = generatePrescriptionCodeForCustomer(customer);
     document.getElementById('c-prescription-code').innerText = prescriptionCode;
     
@@ -415,8 +416,10 @@ function startDay() {
     gameStarted = true;
     document.getElementById('guideText').style.display = 'none';
     document.getElementById('startBtn').style.display = 'none';
-    document.getElementById('patienceGroup').style.display = 'none';
     document.getElementById('handbookArea').style.display = 'flex';
+    
+    // Her gün başında ana listeden rastgele müşteriler seçiyoruz
+    generateRandomCustomersForDay();
     
     buildHandbookFilters();
     renderHandbook();
@@ -425,9 +428,26 @@ function startDay() {
     startSystemClock();
 }
 
+// Ana müşteri havuzundan günlük limit kadar rastgele benzersiz müşteri seçer
+function generateRandomCustomersForDay() {
+    activeDayCustomers = [];
+    currentCustomerIndex = 0; // Her gün başında indeks sıfırlanır
+    
+    // Olası müşteri havuzunu kopyalıyoruz
+    let pool = [...customers];
+    
+    // Günlük limit kadar rastgele çekim yapıyoruz
+    for (let i = 0; i < dailyLimit; i++) {
+        if (pool.length === 0) break; // Havuzda eleman kalmadıysa dur
+        const randomIndex = Math.floor(Math.random() * pool.length);
+        activeDayCustomers.push(pool[randomIndex]);
+        pool.splice(randomIndex, 1); // Seçilen müşteriyi havuzdan çıkarıyoruz (aynı gün tekrar gelmesin)
+    }
+}
+
 // === SÜRE BİTİMİNDE MÜŞTERİNİN TERK ETME SENARYOSU ===
 function handleCustomerTimeout() {
-    const currentCustomer = customers[currentCustomerIndex];
+    const currentCustomer = activeDayCustomers[currentCustomerIndex];
     
     // Süre bitiminde kazanılan/kaybedilen puanlar
     const earnedXp = 0;
@@ -583,7 +603,7 @@ function confirmPrescription() {
 // === İLAÇ SATIŞ ONAYI VE PUANLAMA SİSTEMİ ===
 
 function handleShopConfirm() {
-    const currentCustomer = customers[currentCustomerIndex];
+    const currentCustomer = activeDayCustomers[currentCustomerIndex];
     const submitBtn = document.getElementById('submitBtn');
     const customerPanel = document.getElementById('customerPanel');
 
@@ -681,7 +701,7 @@ function closeModal() {
     document.getElementById('customerPanel').style.borderColor = "var(--border-color)";
     initShopMedicines();
     
-    if (currentCustomerIndex >= customers.length) {
+    if (currentCustomerIndex >= activeDayCustomers.length) {
         triggerGameOverState();
     } else if (dayServedCount >= dailyLimit) {
         triggerDayEndState();
@@ -844,7 +864,7 @@ function verifyNabizCode() {
         return;
     }
 
-    const currentCustomer = customers[currentCustomerIndex];
+    const currentCustomer = activeDayCustomers[currentCustomerIndex];
     const med = medicines.find(m => m.id === currentCustomer.prescribedMed);
 
     const selectedGroup = document.getElementById('nabizSolveGroup').value;
