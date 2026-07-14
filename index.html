@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eczane Tycoon - Çoklu Gün ve Genişletilmiş Hasta Sistemi</title>
+    <!-- Harici stil dosyamızı bağlıyoruz -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Tedavi Sonuç Raporu (Modal) -->
+    <div id="resultModal" class="modal-back" style="display: none;">
+        <div class="modal-box">
+            <h3 id="m-title">Tedavi Sonuç Raporu</h3>
+            <p id="m-desc" style="font-size: 0.85rem; color: var(--text-muted);"></p>
+            <ul id="m-list"></ul>
+            <button class="close-modal-btn" onclick="closeModal()">Devam Et</button>
+        </div>
+    </div>
+
+    <!-- Ana Çalışma Alanı -->
+    <div class="workspace">
+        
+        <!-- SOL PANEL: Akıllı Telefon Mekaniği -->
+        <div class="phone-container">
+            <div class="phone-frame">
+                <div class="phone-notch"></div>
+                <div class="phone-screen" id="phoneScreen">
+                    
+                    <div class="phone-top-row" style="width: 100%;">
+                        <!-- Dinamik Başlık -->
+                        <div id="phoneAppTitle" class="phone-header">Eczacı El Kitabı</div>
+                        <div id="moneyDisplay" class="phone-money-display" onclick="handleMoneyClick()">$300</div>
+                    </div>
+
+                    <!-- Uygulama Seçim Menüsü (Hızlı Geçiş Butonları) -->
+                    <div class="app-switcher-tabs" style="display: flex; gap: 4px; margin-bottom: 12px; z-index: 10;">
+                        <button id="appBtnHandbook" class="app-tab-btn active" onclick="switchPhoneApp('HANDBOOK')">El Kitabı</button>
+                        <button id="appBtnNabiz" class="app-tab-btn" onclick="switchPhoneApp('NABIZ')">Nabız</button>
+                    </div>
+                    
+                    <!-- === UYGULAMA 1: ECZACI EL KİTABI === -->
+                    <div id="appHandbookContainer" style="display: block; flex: 1; display: flex; flex-direction: column;">
+                        <div class="guide-text" id="guideText">
+                            Merhaba Eczacı. Birazdan eczanene müşteriler gelmeye başlayacak. Gelen müşterilerin hastalıklarının iyileşebilmesi için onlara doğru ilaçları satman gerekiyor. Şu anda eczanende hiç ilaç yok. Sana tavsiyem günü başlatmadan önce ecza deposu arayüzüne girip bütün ilaçlardan birer tane satın alman. Bunun için "İlaç Satın Al" butonuna tıklaman yeterli. Sonrasında dükkana geri dön ve günü başlat. Eczacı el kitabından hastalıklar ve ilaç grupları hakkında bilgi edinebilirsin.
+                        </div>
+
+                        <div class="input-group" id="patienceGroup">
+                            <label for="patienceInput">Müşteri Süresi (Saniye)</label>
+                            <input type="number" id="patienceInput" value="60" min="5" onchange="updateCustomerPatienceTime()">
+                        </div>
+
+                        <button id="startBtn" class="start-btn" onclick="startDay()">Günü Başlat</button>
+
+                        <!-- Çift Sekmeli Filtrelenebilir El Kitabı -->
+                        <div id="handbookArea" class="handbook-content" style="display: none;">
+                            <div class="handbook-tabs">
+                                <button id="tabDiseases" class="handbook-tab-btn active" onclick="switchHandbookTab('DISEASES')">Hastalıklar</button>
+                                <button id="tabGroups" class="handbook-tab-btn" onclick="switchHandbookTab('GROUPS')">İlaç Grupları</button>
+                            </div>
+                            
+                            <select id="handbookFilter" class="handbook-filter-select" onchange="renderHandbook()"></select>
+                            
+                            <div id="knowledgeList"></div>
+                        </div>
+                    </div>
+
+                    <!-- === UYGULAMA 2: NABIZ === -->
+                    <div id="appNabizContainer" class="nabiz-app-theme" style="display: none;">
+                        
+                        <!-- Müşteri Verileri (Salt Okunur Giriş Alanları) -->
+                        <div class="nabiz-input-group">
+                            <label>Aktif Hasta</label>
+                            <input type="text" id="nabizCustomerName" readonly placeholder="Müşteri bekleniyor...">
+                        </div>
+
+                        <div class="nabiz-input-group">
+                            <label>Reçete Kodu</label>
+                            <input type="text" id="nabizPrescriptionCode" readonly placeholder="Müşteri bekleniyor...">
+                        </div>
+
+                        <div class="nabiz-divider"></div>
+
+                        <!-- Çözümleme Alanı -->
+                        <h4 class="nabiz-section-title">Lütfen Reçete Kodunu Çözümleyiniz</h4>
+                        
+                        <div class="nabiz-input-group">
+                            <label>İlaç Grubu</label>
+                            <select id="nabizSolveGroup">
+                                <option value="">-- Seçiniz --</option>
+                                <option value="SLN-1">Soğuk Algınlığı ve Öksürük İlaçları</option>
+                                <option value="ANL-1">Ağrı Kesiciler ve Ateş Düşürücüler</option>
+                                <option value="DER-1">Pişik ve Cilt Bakım Kremleri</option>
+                                <option value="ANT-1">Alerji ve Kaşıntı İlaçları</option>
+                                <option value="SND-1">Mide ve Sindirim Düzenleyiciler</option>
+                                <option value="AGZ-1">Ağız Yarası ve Diş Jelleri</option>
+                            </select>
+                        </div>
+
+                        <div class="nabiz-input-group">
+                            <label>Hastalık</label>
+                            <select id="nabizSolveDisease">
+                                <option value="">-- Seçiniz --</option>
+                                <option value="HST-001">Alerjik Egzama</option>
+                                <option value="HST-002">Basit Baş Ağrısı</option>
+                                <option value="HST-003">Aft</option>
+                                <option value="HST-004">Hafif Böcek Isırığı</option>
+                                <option value="HST-005">Hafif Pişik</option>
+                                <option value="HST-006">Klimalı Oda Çarpması</option>
+                                <option value="HST-007">Hafif Hazımsızlık</option>
+                                <option value="HST-008">Toz Alerjisi</option>
+                                <option value="HST-009">Saman Nezlesi</option>
+                                <option value="HST-010">Hafif Üşütme</option>
+                                <option value="HST-011">Diş Çıkarma Ateşi</option>
+                            </select>
+                        </div>
+
+                        <div class="nabiz-input-group">
+                            <label>Yaş Grubu</label>
+                            <select id="nabizSolveAge">
+                                <option value="">-- Seçiniz --</option>
+                                <option value="AGE-1">Bebek</option>
+                                <option value="AGE-2">Çocuk</option>
+                                <option value="AGE-3">Yetişkin</option>
+                            </select>
+                        </div>
+
+                        <button class="nabiz-action-btn" onclick="verifyNabizCode()">Onayla ve Çözümle</button>
+
+                        <div class="nabiz-divider"></div>
+
+                        <!-- Dinamik Reçete Sonuç Alanı -->
+                        <div id="nabizPrescriptionReport" style="display: none; padding: 10px 0; animation: fadeIn 0.3s ease;">
+                            <h4 class="nabiz-section-title" style="color: #0284c7; text-align: left; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 12px;">HASTANIN BİLGİLERİ</h4>
+                            <div class="prescription-row"><strong>Adı Soyadı:</strong> <span id="n-rep-name">-</span></div>
+                            <div class="prescription-row"><strong>Hastalık:</strong> <span id="n-rep-disease">-</span></div>
+                            <div class="prescription-row"><strong>Yaş Grubu:</strong> <span id="n-rep-age">-</span></div>
+                            <div class="prescription-row" style="margin-top: 8px; border-top: 1px dashed #cbd5e1; padding-top: 8px;">
+                                <strong>Önerilen İlaç:</strong> <span id="n-rep-med" class="text-success">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- SAĞ PANEL: Yönetim Panelleri -->
+        <div id="dashboardPanels" class="dashboard-panels">
+            
+            <!-- Üst Panel: Dükkan Görünümü -->
+            <div id="shopPanel" class="panel">
+                <div class="panel-header-row">
+                    <div>
+                        <span class="panel-title">Elde Bulunan İlaçlar</span>
+                        <button class="nav-btn" style="margin-left: 10px;" onclick="switchToDepot()">İlaç Satın Al</button>
+                    </div>
+                    <div class="filter-container" id="shopFilterContainer">
+                        <button class="filter-btn active" onclick="filterShopMedicines('HEPSİ', this)">Hepsi</button>
+                        <button class="filter-btn" onclick="filterShopMedicines('SLN-1', this)">SLN-1</button>
+                        <button class="filter-btn" onclick="filterShopMedicines('ANL-1', this)">ANL-1</button>
+                        <button class="filter-btn" onclick="filterShopMedicines('DER-1', this)">DER-1</button>
+                        <button class="filter-btn" onclick="filterShopMedicines('ANT-1', this)">ANT-1</button>
+                        <button class="filter-btn" onclick="filterShopMedicines('SND-1', this)">SND-1</button>
+                        <button class="filter-btn" onclick="filterShopMedicines('AGZ-1', this)">AGZ-1</button>
+                    </div>
+                </div>
+                <div class="med-grid" id="medGrid"></div>
+            </div>
+
+            <!-- Alternatif Panel: İlaç Deposu Arayüzü -->
+            <div id="depotPanel" class="panel depot-mode" style="display: none;">
+                <div class="panel-header-row">
+                    <div>
+                        <span class="panel-title" style="color: var(--warning-color);">İlaç Deposu (Toptancı)</span>
+                        <button class="nav-btn" style="margin-left: 10px; background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3); color: var(--success-color);" onclick="switchToShop()">Dükkana Geri Dön</button>
+                    </div>
+                    <div class="filter-container" id="depotFilterContainer">
+                        <button class="filter-btn active" onclick="filterDepotMedicines('HEPSİ', this)">Hepsi</button>
+                        <button class="filter-btn" onclick="filterDepotMedicines('SLN-1', this)">SLN-1</button>
+                        <button class="filter-btn" onclick="filterDepotMedicines('ANL-1', this)">ANL-1</button>
+                        <button class="filter-btn" onclick="filterDepotMedicines('DER-1', this)">DER-1</button>
+                        <button class="filter-btn" onclick="filterDepotMedicines('ANT-1', this)">ANT-1</button>
+                        <button class="filter-btn" onclick="filterDepotMedicines('SND-1', this)">SND-1</button>
+                        <button class="filter-btn" onclick="filterDepotMedicines('AGZ-1', this)">AGZ-1</button>
+                    </div>
+                </div>
+                <div class="med-grid" id="depotMedGrid"></div>
+            </div>
+
+            <!-- Orta Panel: Sadece Reçete Kodu Gösteren Panel -->
+            <div id="customerPanel" class="panel customer-panel">
+                <div class="customer-overlay" id="customerOverlay">
+                    <div class="customer-arrival-text" id="overlayMessage">Günü başlatmanız bekleniyor... Müşteriler yolda.</div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div class="panel-title" id="customerPanelTitle">Süre Sayacı</div>
+                </div>
+                
+                <div class="timer-container">
+                    <div id="timerBar" class="timer-bar"></div>
+                </div>
+
+                <!-- Sadece Reçete Kodu ve Çözümleme Uyarısı Barındıran Yeni Temiz Yapı -->
+                <div id="customerGrid" class="customer-grid" style="margin-top: 14px; grid-template-columns: 1fr;">
+                    <div class="data-field" style="background: rgba(59, 130, 246, 0.1); border: 2px solid var(--primary-color); border-radius: 8px; padding: 20px; text-align: center;">
+                        <div class="label" style="font-weight: bold; color: var(--accent-color); font-size: 1rem; margin-bottom: 6px; letter-spacing: 1px;">ÇÖZÜLMESİ GEREKEN REÇETE KODU</div>
+                        <div class="value" id="c-prescription-code" style="font-size: 2.2rem; font-weight: 800; color: #ffffff; letter-spacing: 3px; text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);">--</div>
+                    </div>
+                    
+                    <div id="nabizLockWarning" style="background: rgba(239, 68, 68, 0.1); border: 1px dashed var(--danger-color); border-radius: 8px; padding: 12px; text-align: center; color: #f87171; font-size: 0.85rem; font-weight: 600;">
+                        ⚠️ Dikkat: Nabız uygulamasında bu reçete kodunu çözümlemeden ilaç satışı yapamazsınız!
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alt Panel: Dinamik Sepet -->
+            <div class="panel cart-wrapper">
+                <div class="panel-title" id="cartTitle">Sepet (Müşteri Reçetesi)</div>
+                <div id="cartList" class="cart-list">
+                    <div id="cartEmpty" class="cart-empty">Sepet boş. İlaç listesinden seçim yapın.</div>
+                </div>
+                <div class="action-container">
+                    <button id="submitBtn" class="submit-btn" disabled onclick="confirmPrescription()">Onayla</button>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Ana JavaScript mantığımızı modül olarak dahil ediyoruz -->
+    <script src="game.js"></script>
+</body>
+</html>
