@@ -46,15 +46,45 @@
                         <button id="appBtnNabiz" class="app-tab-btn" onclick="switchPhoneApp('NABIZ')">Nabız</button>
                     </div>
                     
-                    <!-- === UYGULAMA 1: ECZACI EL KİTABI === -->
+                    <!-- === UYGULAMA 1: ECZACI EL KİTABI VE KİLİT EKRANI === -->
                     <div id="appHandbookContainer" style="display: block; flex: 1; display: flex; flex-direction: column;">
-                        <div class="guide-text" id="guideText">
-                            Merhaba Eczacı. Birazdan eczanene müşteriler gelmeye başlayacak. Gelen müşterilerin hastalıklarının iyileşebilmesi için onlara doğru ilaçları satman gerekiyor. Şu anda eczanende hiç ilaç yok. Sana tavsiyem günü başlatmadan önce ecza deposu arayüzüne girip bütün ilaçlardan birer tane satın alman. Bunun için "İlaç Satın Al" butonuna tıklaman yeterli. Sonrasında dükkana geri dön ve günü başlat. Eczacı el kitabından hastalıklar ve ilaç grupları hakkında bilgi edinebilirsin.
+                        
+                        <!-- Kilit Ekranı Arayüzü (Günü Başlatmadan Önce Görünecek) -->
+                        <div id="lockScreenArea" style="display: flex; flex-direction: column; align-items: center; justify-content: space-between; flex: 1; padding: 20px 0;">
+                            <!-- Kilit Ekranı Saati ve Tarihi -->
+                            <div style="text-align: center; margin-bottom: 20px;">
+                                <div id="lockScreenClock" style="font-size: 3rem; font-weight: 300; letter-spacing: -1px; margin-bottom: 2px; color: #ffffff;">08:00</div>
+                                <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted);">Pazartesi</div>
+                            </div>
+                    
+                            <!-- Nabız Bildirim Kartı (Hastalıklar Burada Listelenecek) -->
+                            <div id="lockScreenNotification" style="background: rgba(255, 255, 255, 0.08); border-left: 4px solid #0284c7; border-radius: 12px; width: 100%; padding: 14px; margin-bottom: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.2); backdrop-filter: blur(5px);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <div style="display: flex; align-items: center; gap: 6px;">
+                                        <span style="font-size: 0.9rem;">🩺</span>
+                                        <strong style="font-size: 0.78rem; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.5px;">Nabız Sistemi</strong>
+                                    </div>
+                                    <span style="font-size: 0.65rem; color: var(--text-muted);">Şimdi</span>
+                                </div>
+                                <div style="font-size: 0.85rem; font-weight: bold; margin-bottom: 6px; color: #f8fafc;">Günlük Reçete Raporu Geldi!</div>
+                                <div style="font-size: 0.75rem; color: #cbd5e1; line-height: 1.4;">
+                                    Bugün eczaneye gelecek vakaların teşhis listesi:
+                                    <ul id="lockScreenDiseaseList" style="margin-top: 6px; padding-left: 14px; list-style-type: disc;">
+                                        <!-- JavaScript tarafından dinamik doldurulacak -->
+                                    </ul>
+                                </div>
+                            </div>
+                    
+                            <!-- Parmak İzi Efektli Günü Başlat Butonu -->
+                            <div style="width: 100%; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                                <button id="startBtn" class="start-btn" onclick="startDay()" style="display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 50px; padding: 14px 20px;">
+                                    <span style="font-size: 1.2rem;">🔑</span> Günü Başlat (Parmak İzi)
+                                </button>
+                                <span style="font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.5px;">Giriş yapmak için dokunun</span>
+                            </div>
                         </div>
-
-                        <button id="startBtn" class="start-btn" onclick="startDay()">Günü Başlat</button>
-
-                        <!-- Çift Sekmeli Filtrelenebilir El Kitabı -->
+                    
+                        <!-- Çift Sekmeli Filtrelenebilir El Kitabı (Telefon Açılınca Görünecek) -->
                         <div id="handbookArea" class="handbook-content" style="display: none;">
                             <div class="handbook-tabs">
                                 <button id="tabDiseases" class="handbook-tab-btn active" onclick="switchHandbookTab('DISEASES')">Hastalıklar</button>
