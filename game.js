@@ -24,7 +24,7 @@ const symptoms = [
 const diseaseTypes = [
     { id: "TYP-001", name: "Dermatoloji", desc: "Cilt yüzeyinde oluşan, genellikle dış etken kaynaklı rahatsızlıklar." },
     { id: "TYP-002", name: "Nörolojik", desc: "Sinir sistemi ve beyin fonksiyonlarıyla ilgili hafif veya ağır ağrı/disfonksiyonlar." },
-    { id: "TYP-003", name: "Ağız Sağlığı", desc: "Diş, diş eti ve ağız içi mukozasında görülen lokalize sorunlar." },
+    { id: "TYP-003", name: "Ağız Sağlığı", desc: "Diş, diş eti og ağız içi mukozasında görülen lokalize sorunlar." },
     { id: "TYP-004", name: "Solunum", desc: "Akciğer ve solunum yollarını etkileyen, mevsimselliği yüksek hastalıklar." },
     { id: "TYP-005", name: "Sindirim", desc: "Mide ve bağırsak florasını etkileyen, beslenme veya mikrobik kaynaklı durumlar." },
     { id: "TYP-006", name: "Alerji", desc: "Vücudun dış etkenlere (toz, polen vb.) karşı gösterdiği aşırı reaksiyonlar." },
@@ -105,7 +105,7 @@ const symptomNamesMap = {
 
 const groupNamesMap = {
     "SLN-1": "Soğuk Algınlığı ve Öksürük İlaçları",
-    "ANL-1": "Ağrı Kesiciler ve Ateş Düşürücüler",
+    "ANL-1": "Ağrı Kesiciler og Ateş Düşürücüler",
     "DER-1": "Pişik ve Cilt Bakım Kremleri",
     "ANT-1": "Alerji ve Kaşıntı İlaçları",
     "SND-1": "Mide ve Sindirim Düzenleyiciler",
@@ -124,27 +124,27 @@ let currentCustomerIndex = 0;
 let cart = [];
 let isWarningActive = false;
 let money = 300;
-let xp = 0;             // YENİ: Deneyim Puanı
-let ep = 0;             // YENİ: Eczane Puanı
+let xp = 0;             // Deneyim Puanı
+let ep = 0;             // Eczane Puanı
 let gameStarted = false;
-let isNabizVerified = false; // Oyuncunun kodu başarıyla çözüp çözmediğini tutar[cite: 2]
+let isNabizVerified = false; // Oyuncunun kodu başarıyla çözüp çözmediğini tutar
 
-let currentShopFilter = 'HEPSİ';[cite: 2]
-let currentDepotFilter = 'HEPSİ';[cite: 2]
-let currentMode = 'SHOP'; [cite: 2]
-let currentHandbookTab = 'DISEASES'; // Varsayılan sekme DISEASES yapıldı[cite: 2]
+let currentShopFilter = 'HEPSİ';
+let currentDepotFilter = 'HEPSİ';
+let currentMode = 'SHOP'; 
+let currentHandbookTab = 'DISEASES'; // Varsayılan sekme DISEASES yapıldı
 
-let moneyClickCount = 0;[cite: 2]
-let moneyClickTimeout;[cite: 2]
+let moneyClickCount = 0;
+let moneyClickTimeout;
 
-let systemState = 'EMPTY_WAIT'; [cite: 2]
-let timeRemaining = 10;[cite: 2]
-let maxCustomerPatience = 60; [cite: 2]
-let mainClockInterval = null;[cite: 2]
+let systemState = 'EMPTY_WAIT'; 
+let timeRemaining = 10;
+let maxCustomerPatience = 60; 
+let mainClockInterval = null;
 
-let currentDayNumber = 1;[cite: 2]
-let dayServedCount = 0; [cite: 2]
-const dailyLimit = 5;[cite: 2]
+let currentDayNumber = 1;
+let dayServedCount = 0; 
+const dailyLimit = 5;
 
 // Global HTML olay bağlantıları
 window.startDay = startDay;
@@ -164,7 +164,43 @@ window.handleMoneyClick = handleMoneyClick;
 window.switchPhoneApp = switchPhoneApp;
 window.verifyNabizCode = verifyNabizCode;
 
-// === 4. ÇEKİRDEK OYUN FONKSİYONLARI ===
+// === 4. SKOR VE BİRİM GÜNCELLEME FONKSİYONLARI ===
+
+function updateMoney(amount) {
+    money += amount;
+    const display = document.getElementById('moneyDisplay');
+    if (!display) return;
+    display.innerText = `$${money}`;
+    display.classList.remove('money-gain');
+    display.offsetHeight; 
+    display.classList.add('money-gain');
+    setTimeout(() => display.classList.remove('money-gain'), 600);
+}
+
+function updateXp(amount) {
+    xp += amount;
+    if (xp < 0) xp = 0; // Deneyim eksiye düşmesin
+    const display = document.getElementById('xpDisplay');
+    if (!display) return;
+    display.innerText = `${xp} XP`;
+    display.classList.remove('stat-gain');
+    display.offsetHeight; 
+    display.classList.add('stat-gain');
+    setTimeout(() => display.classList.remove('stat-gain'), 600);
+}
+
+function updateEp(amount) {
+    ep += amount; // Eczane puanı eksiye düşebilir
+    const display = document.getElementById('epDisplay');
+    if (!display) return;
+    display.innerText = `${ep} EP`;
+    display.classList.remove('stat-gain');
+    display.offsetHeight; 
+    display.classList.add('stat-gain');
+    setTimeout(() => display.classList.remove('stat-gain'), 600);
+}
+
+// === 5. ÇEKİRDEK OYUN FONKSİYONLARI ===
 
 // Müşteri dükkana girdiğinde dinamik olarak reçete kodunu üretir
 function generatePrescriptionCodeForCustomer(customer) {
@@ -265,40 +301,33 @@ function updateCustomerPatienceTime() {
     }
 }
 
+// Oyun başlangıcında saati tamamen sıfırlayan ve döngüyü temiz başlatan sistem
 function startSystemClock() {
     if(mainClockInterval) clearInterval(mainClockInterval);
     
-    enterCustomerActiveState();
+    enterEmptyWaitState(); // İlk olarak 10 saniyelik boş bekleme süresine girilsin.
 
-    mainClockInterval = setInterval(() => {
-        if(isWarningActive || document.getElementById('resultModal').style.display === 'flex' || systemState === 'DAY_END') return;
+    mainClockInterval = setInterval(systemClockTick, 1000);
+}
 
-        timeRemaining--;
-        updateTimerBarUI();
+function systemClockTick() {
+    if(isWarningActive || document.getElementById('resultModal').style.display === 'flex' || systemState === 'DAY_END') return;
 
-        if (timeRemaining <= 0) {
-            if (systemState === 'EMPTY_WAIT') {
-                if (dayServedCount >= dailyLimit) {
-                    triggerDayEndState();
-                } else {
-                    enterCustomerActiveState();
-                }
-            } else if (systemState === 'CUSTOMER_ACTIVE') {
-                dayServedCount++;
-                currentCustomerIndex++;
-                cart = [];
-                renderCart();
-                
-                if (currentCustomerIndex >= customers.length) {
-                    triggerGameOverState();
-                } else if (dayServedCount >= dailyLimit) {
-                    triggerDayEndState();
-                } else {
-                    enterEmptyWaitState();
-                }
+    timeRemaining--;
+    updateTimerBarUI();
+
+    if (timeRemaining <= 0) {
+        if (systemState === 'EMPTY_WAIT') {
+            if (dayServedCount >= dailyLimit) {
+                triggerDayEndState();
+            } else {
+                enterCustomerActiveState();
             }
+        } else if (systemState === 'CUSTOMER_ACTIVE') {
+            // Müşteri bekleme süresi bitti ve eczaneyi terk ediyor!
+            handleCustomerTimeout();
         }
-    }, 1000);
+    }
 }
 
 function enterEmptyWaitState() {
@@ -402,46 +431,23 @@ function updateTimerBarUI() {
 
 function startDay() {
     gameStarted = true;
-    document.getElementById('guideText').style.display = 'none';[cite: 2]
-    document.getElementById('startBtn').style.display = 'none';[cite: 2]
-    document.getElementById('patienceGroup').style.display = 'none';[cite: 2]
-    document.getElementById('handbookArea').style.display = 'flex';[cite: 2]
+    document.getElementById('guideText').style.display = 'none';
+    document.getElementById('startBtn').style.display = 'none';
+    document.getElementById('patienceGroup').style.display = 'none';
+    document.getElementById('handbookArea').style.display = 'flex';
     
-    buildHandbookFilters();[cite: 2]
-    renderHandbook();[cite: 2]
+    buildHandbookFilters();
+    renderHandbook();
     
-    // Değişiklik: Günü doğrudan hasta ile değil, 10 saniyelik boş bekleme süresi ile başlatıyoruz.
-    if(mainClockInterval) clearInterval(mainClockInterval);
-    enterEmptyWaitState(); 
-    
-    mainClockInterval = setInterval(systemClockTick, 1000);
-}
-
-function systemClockTick() {
-    if(isWarningActive || document.getElementById('resultModal').style.display === 'flex' || systemState === 'DAY_END') return;[cite: 2]
-
-    timeRemaining--;[cite: 2]
-    updateTimerBarUI();[cite: 2]
-
-    if (timeRemaining <= 0) {
-        if (systemState === 'EMPTY_WAIT') {
-            if (dayServedCount >= dailyLimit) {
-                triggerDayEndState();[cite: 2]
-            } else {
-                enterCustomerActiveState();[cite: 2]
-            }
-        } else if (systemState === 'CUSTOMER_ACTIVE') {
-            // Müşteri bekleme süresi bitti ve eczaneyi terk ediyor!
-            handleCustomerTimeout();
-        }
-    }
+    // Günü doğrudan boş zaman ile başlatıyoruz (10 saniye bekleme)
+    startSystemClock();
 }
 
 // === SÜRE BİTİMİNDE MÜŞTERİNİN TERK ETME SENARYOSU ===
 function handleCustomerTimeout() {
     const currentCustomer = customers[currentCustomerIndex];
     
-    // Puan cezaları
+    // Süre bitiminde kazanılan/kaybedilen puanlar
     const earnedXp = 0;
     const earnedEp = -10;
     
@@ -452,14 +458,14 @@ function handleCustomerTimeout() {
     document.getElementById('m-title').innerText = `${currentCustomer.name} Eczaneyi Terk Etti!`;
     document.getElementById('m-desc').innerHTML = `
         <span style="color: var(--danger-color); font-weight: bold;">Müşteri işlem süresi bittiği için hizmet alamadan ayrıldı.</span><br><br>
-        <strong>Kazanılan Deneyim:</strong> <span style="color: #a855f7;">+${earnedXp} XP</span><br>
-        <strong>Eczane Puanı Değişimi:</strong> <span style="color: var(--danger-color);">${earnedEp} EP</span>
+        <strong>Kazanılan Deneyim:</strong> <span style="color: #a855f7; font-weight: bold;">+${earnedXp} XP</span><br>
+        <strong>Eczane Puanı Etkisi:</strong> <span style="color: var(--danger-color); font-weight: bold;">${earnedEp} EP</span>
     `;
     
     // Semptomların hiçbiri iyileştirilemedi olarak listeleniyor
     let reportHTML = "";
     currentCustomer.symptomsList.forEach(symptom => {
-        const turkishSymptomName = symptomNamesMap[symptom] || symptom;[cite: 2]
+        const turkishSymptomName = symptomNamesMap[symptom] || symptom;
         reportHTML += `<li class="failed">İyileştirilemedi: <strong>${turkishSymptomName}</strong> (Süre bitti)</li>`;
     });
     
@@ -470,10 +476,10 @@ function handleCustomerTimeout() {
     document.getElementById('customerPanel').style.borderColor = "var(--danger-color)";
 
     // Sıradaki hastaya hazırlık işlemleri
-    dayServedCount++;[cite: 2]
-    currentCustomerIndex++;[cite: 2]
-    cart = [];[cite: 2]
-    renderCart();[cite: 2]
+    dayServedCount++;
+    currentCustomerIndex++;
+    cart = [];
+    renderCart();
 }
 
 function switchToDepot() {
@@ -595,56 +601,56 @@ function confirmPrescription() {
 // === İLAÇ SATIŞ ONAYI VE PUANLAMA SİSTEMİ ===
 
 function handleShopConfirm() {
-    const currentCustomer = customers[currentCustomerIndex];[cite: 2]
-    const submitBtn = document.getElementById('submitBtn');[cite: 2]
-    const customerPanel = document.getElementById('customerPanel');[cite: 2]
+    const currentCustomer = customers[currentCustomerIndex];
+    const submitBtn = document.getElementById('submitBtn');
+    const customerPanel = document.getElementById('customerPanel');
 
-    const primaryMed = cart[0];[cite: 2]
-    const customerAge = currentCustomer.ageGroup.trim().toLowerCase();[cite: 2]
+    const primaryMed = cart[0];
+    const customerAge = currentCustomer.ageGroup.trim().toLowerCase();
 
-    const isAgeCompatible = primaryMed.compatibility.some(ageId => {[cite: 2]
-        const mappedAgeName = (ageGroupsMap[ageId] || "").trim().toLowerCase();[cite: 2]
-        return mappedAgeName === customerAge;[cite: 2]
+    const isAgeCompatible = primaryMed.compatibility.some(ageId => {
+        const mappedAgeName = (ageGroupsMap[ageId] || "").trim().toLowerCase();
+        return mappedAgeName === customerAge;
     });
 
-    if (!isAgeCompatible) {[cite: 2]
-        isWarningActive = true;[cite: 2]
-        submitBtn.disabled = true;[cite: 2]
-        submitBtn.classList.remove('active');[cite: 2]
-        submitBtn.classList.add('warning');[cite: 2]
-        submitBtn.innerText = "Bu müşteriye bu ilacı veremezsiniz!";[cite: 2]
-        setTimeout(() => {[cite: 2]
-            isWarningActive = false;[cite: 2]
-            submitBtn.classList.remove('warning');[cite: 2]
-            submitBtn.innerText = "Onayla";[cite: 2]
-            renderCart();[cite: 2]
-        }, 5000);[cite: 2]
-        return;[cite: 2]
+    if (!isAgeCompatible) {
+        isWarningActive = true;
+        submitBtn.disabled = true;
+        submitBtn.classList.remove('active');
+        submitBtn.classList.add('warning');
+        submitBtn.innerText = "Bu müşteriye bu ilacı veremezsiniz!";
+        setTimeout(() => {
+            isWarningActive = false;
+            submitBtn.classList.remove('warning');
+            submitBtn.innerText = "Onayla";
+            renderCart();
+        }, 5000);
+        return;
     }
 
-    const customerSymptoms = currentCustomer.symptomsList;[cite: 2]
-    let totalProfit = 0;[cite: 2]
-    let reportHTML = "";[cite: 2]
+    const customerSymptoms = currentCustomer.symptomsList;
+    let totalProfit = 0;
+    let reportHTML = "";
 
-    let combinedMedSymptoms = [];[cite: 2]
-    cart.forEach(med => {[cite: 2]
-        med.count--;[cite: 2]
-        totalProfit += med.price;[cite: 2]
-        combinedMedSymptoms = combinedMedSymptoms.concat(med.symptoms);[cite: 2]
+    let combinedMedSymptoms = [];
+    cart.forEach(med => {
+        med.count--;
+        totalProfit += med.price;
+        combinedMedSymptoms = combinedMedSymptoms.concat(med.symptoms);
     });
 
     let healedCount = 0;
 
-    customerSymptoms.forEach(symptom => {[cite: 2]
-        let isHealed = combinedMedSymptoms.some(mSym => mSym.toLowerCase().trim() === symptom.toLowerCase().trim());[cite: 2]
+    customerSymptoms.forEach(symptom => {
+        let isHealed = combinedMedSymptoms.some(mSym => mSym.toLowerCase().trim() === symptom.toLowerCase().trim());
         
-        if (isHealed) {[cite: 2]
+        if (isHealed) {
             healedCount++;
-            const turkishSymptomName = symptomNamesMap[symptom] || symptom;[cite: 2]
-            reportHTML += `<li class="healed">İyileştirildi: <strong>${turkishSymptomName}</strong></li>`;[cite: 2]
-        } else {[cite: 2]
-            const turkishSymptomName = symptomNamesMap[symptom] || symptom;[cite: 2]
-            reportHTML += `<li class="failed">İyileştirilemedi: <strong>${turkishSymptomName}</strong></li>`;[cite: 2]
+            const turkishSymptomName = symptomNamesMap[symptom] || symptom;
+            reportHTML += `<li class="healed">İyileştirildi: <strong>${turkishSymptomName}</strong></li>`;
+        } else {
+            const turkishSymptomName = symptomNamesMap[symptom] || symptom;
+            reportHTML += `<li class="failed">İyileştirilemedi: <strong>${turkishSymptomName}</strong></li>`;
         }
     });
 
@@ -661,13 +667,13 @@ function handleShopConfirm() {
         earnedEp = -5;
     }
 
-    // Puanları veritabanına/state'e işle
-    updateMoney(totalProfit);[cite: 2]
+    // Puanları veritabanına/state'e işle ve UI'ı tetikle
+    updateMoney(totalProfit);
     updateXp(earnedXp);
     updateEp(earnedEp);
 
-    // Pop-up içeriğini puanları da içerecek şekilde zenginleştiriyoruz
-    document.getElementById('m-title').innerText = `${currentCustomer.name} - Teşhis Sonucu`;[cite: 2]
+    // Pop-up içeriğini dinamik HTML olarak oluşturuyoruz
+    document.getElementById('m-title').innerText = `${currentCustomer.name} - Teşhis Sonucu`;
     
     let scoreColorClass = isPerfectHeal ? "color: var(--success-color);" : "color: var(--danger-color);";
     
@@ -677,15 +683,15 @@ function handleShopConfirm() {
         <strong>Eczane Puanı Etkisi:</strong> <span style="${scoreColorClass} font-weight: bold;">${earnedEp > 0 ? "+" + earnedEp : earnedEp} EP</span>
     `;
     
-    document.getElementById('m-list').innerHTML = reportHTML;[cite: 2]
-    document.getElementById('resultModal').style.display = 'flex';[cite: 2]
+    document.getElementById('m-list').innerHTML = reportHTML;
+    document.getElementById('resultModal').style.display = 'flex';
 
-    customerPanel.style.borderColor = "var(--success-color)";[cite: 2]
+    customerPanel.style.borderColor = "var(--success-color)";
 
-    dayServedCount++;[cite: 2]
-    currentCustomerIndex++;[cite: 2]
-    cart = [];[cite: 2]
-    renderCart();[cite: 2]
+    dayServedCount++;
+    currentCustomerIndex++;
+    cart = [];
+    renderCart();
 }
 
 function closeModal() {
@@ -813,40 +819,6 @@ function handleDepotConfirm() {
     renderCart();
     initDepotMedicines();
     initShopMedicines();
-}
-
-function updateMoney(amount) {
-    money += amount;
-    const display = document.getElementById('moneyDisplay');
-    if (!display) return;
-    display.innerText = `$${money}`;
-    display.classList.remove('money-gain');
-    display.offsetHeight; 
-    display.classList.add('money-gain');
-    setTimeout(() => display.classList.remove('money-gain'), 600);
-}
-
-function updateXp(amount) {
-    xp += amount;
-    if (xp < 0) xp = 0; // Deneyim eksiye düşmesin
-    const display = document.getElementById('xpDisplay');
-    if (!display) return;
-    display.innerText = `${xp} XP`;
-    display.classList.remove('stat-gain');
-    display.offsetHeight; 
-    display.classList.add('stat-gain');
-    setTimeout(() => display.classList.remove('stat-gain'), 600);
-}
-
-function updateEp(amount) {
-    ep += amount; // Eczane puanı eksiye düşebilir
-    const display = document.getElementById('epDisplay');
-    if (!display) return;
-    display.innerText = `${ep} EP`;
-    display.classList.remove('stat-gain');
-    display.offsetHeight; 
-    display.classList.add('stat-gain');
-    setTimeout(() => display.classList.remove('stat-gain'), 600);
 }
 
 function handleMoneyClick() {
