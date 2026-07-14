@@ -386,7 +386,13 @@ function triggerDayEndState() {
 function progressToNextDay() {
     currentDayNumber++;
     dayServedCount = 0;
-    startSystemClock(); //[cite: 12]
+    
+    // YENİ GÜNÜN HAZIRLIĞI: 
+    // Bir sonraki günün 5 rastgele hastasını seçip indeksi sıfırlıyoruz
+    generateRandomCustomersForDay(); 
+    
+    // Şimdi saati ve boş zaman periyodunu temiz bir şekilde başlatabiliriz
+    startSystemClock(); 
 }
 
 function triggerGameOverState() {
