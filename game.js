@@ -235,7 +235,7 @@ function startDay() {
     if (gameStarted) return; 
     gameStarted = true;
     
-    // Kilit ekranını gizle
+    // Kilit ekranını gizle (Tek bir .style ile güvenli erişim)
     const lockArea = document.getElementById('lockScreenArea');
     if (lockArea) {
         lockArea.style.setProperty('display', 'none', 'important');
