@@ -800,13 +800,17 @@ function handleShopConfirm() {
     let totalProfit = 0; //[cite: 3]
     let reportHTML = ""; //[cite: 3]
 
-    let combinedMedSymptoms = []; //[cite: 3]
-    cart.forEach(med => {
-        med.count--; // Arka planda stok düşüyor[cite: 3]
-        totalProfit += med.price; //[cite: 3]
-        combinedMedSymptoms = combinedMedSymptoms.concat(med.symptoms); //[cite: 3]
+    let combinedMedSymptoms = [];
+    cart.forEach(cartItem => {
+        // Orijinal medicines dizisindeki gerçek nesneyi ID'si ile buluyoruz
+        const originalMed = medicines.find(m => m.id === cartItem.id);
+        if (originalMed) {
+            originalMed.count--; // Gerçek stoktan düşüyoruz
+        }
+        
+        totalProfit += cartItem.price;
+        combinedMedSymptoms = combinedMedSymptoms.concat(cartItem.symptoms);
     });
-
     let healedCount = 0; //[cite: 3]
 
     customerSymptoms.forEach(symptom => {
