@@ -155,7 +155,18 @@ const totalDaysLimit = 4;
 // === 4. SKOR VE BİRİM GÜNCELLEME FONKSİYONLARI ===
 
 function updateMoney(amount) {
-    money += amount;
+    // Gelen parametrenin geçerli bir sayı olduğunu garanti ediyoruz
+    const parsedAmount = Number(amount);
+    if (isNaN(parsedAmount)) return;
+
+    // Global money değişkeninin sayı kaldığından emin oluyoruz
+    money = Number(money);
+    if (isNaN(money)) {
+        money = 300; // Eğer bir şekilde bozulduysa varsayılan değere dön
+    }
+
+    money += parsedAmount;
+
     const display = document.getElementById('moneyDisplay');
     if (!display) return;
     display.innerText = `$${money}`;
@@ -509,7 +520,7 @@ function triggerDayEndState() {
     if(mainClockInterval) clearInterval(mainClockInterval);
     const overlay = document.getElementById('customerOverlay');
     if (overlay) {
-        overlay.style.display = 'flex';
+        overlay.style.setProperty('display', 'flex', 'important');
         overlay.innerHTML = `
             <div class="customer-arrival-text" style="color: var(--warning-color);">Bugünlük ${dailyLimit} hasta limitine ulaşıldı. Gün Bitti!</div>
             <button class="next-day-btn" onclick="progressToNextDay()">Günü Bitir</button>
@@ -525,47 +536,65 @@ function progressToNextDay() {
     // 1. Yeni günün müşterilerini arka planda belirle
     generateRandomCustomersForDay(); 
     
-    // 2. Kilit ekranını tekrar görünür yap, el kitabını ve Nabız uygulamasını gizle
+    // 2. Kilit ekranını ve telefon bileşenlerini seç
     const lockArea = document.getElementById('lockScreenArea');
-    if (lockArea && lockArea.style) {
+    const handbookArea = document.getElementById('handbookArea');
+    const appNabiz = document.getElementById('appNabizContainer');
+    const switcher = document.getElementById('appSwitcherTabs');
+    
+    // 3. Telefon ekranını kesin olarak kilitle ve diğer uygulamaları gizle
+    if (lockArea) {
         lockArea.style.setProperty('display', 'flex', 'important');
     }
     
-    const handbookArea = document.getElementById('handbookArea');
-    if (handbookArea && handbookArea.style) {
+    if (handbookArea) {
         handbookArea.style.setProperty('display', 'none', 'important');
     }
     
-    const appNabiz = document.getElementById('appNabizContainer');
-    if (appNabiz && appNabiz.style) {
+    if (appNabiz) {
         appNabiz.style.setProperty('display', 'none', 'important');
     }
     
-    // 3. Telefonun üst uygulama sekmelerini gizle
-    const switcher = document.getElementById('appSwitcherTabs');
-    if (switcher && switcher.style) {
+    if (switcher) {
         switcher.style.setProperty('display', 'none', 'important');
     }
     
     // 4. Nabız çözümlenmiş rapor ekranını temizle ve sıfırla
-    document.getElementById('nabizPrescriptionReport').style.display = 'none';
-    switchPhoneApp('HANDBOOK'); // Varsayılan olarak El Kitabı sekmesine konumlandır
+    const reportCard = document.getElementById('nabizPrescriptionReport');
+    if (reportCard) {
+        reportCard.style.setProperty('display', 'none', 'important');
+    }
+    
+    // Telefon ekranını varsayılan olarak El Kitabı sekmesine konumlandır
+    switchPhoneApp('HANDBOOK'); 
     
     // 5. Belirlenen yeni gün hastalıklarını kilit ekranı bildirim listesine doldur
     updateLockScreenNotification();
     
     // 6. Saat ve panelleri ilk durumuna getir
-    document.getElementById('lockScreenClock').innerText = "08:00";
+    const lockClock = document.getElementById('lockScreenClock');
+    if (lockClock) {
+        lockClock.innerText = "08:00";
+    }
     
-    if(mainClockInterval) clearInterval(mainClockInterval);
-    document.getElementById('c-prescription-code').innerText = "--";
+    if (mainClockInterval) clearInterval(mainClockInterval);
+    
+    const prescriptionCodeDisplay = document.getElementById('c-prescription-code');
+    if (prescriptionCodeDisplay) {
+        prescriptionCodeDisplay.innerText = "--";
+    }
     
     // 7. Sağ taraftaki dükkan paneline müşterilerin beklendiği uyarısını koy
     const overlay = document.getElementById('customerOverlay');
     if (overlay) {
-        overlay.style.display = 'flex';
-        overlay.innerHTML = `<div class="customer-arrival-text">Günü başlatmanız bekleniyor... Müşteriler yolda.</div>`;
+        overlay.style.setProperty('display', 'flex', 'important');
+        overlay.innerHTML = `<div class="customer-arrival-text">Günü başlatmanız bekleniyor...<br>Müşteriler yolda.</div>`;
     }
+    
+    // Dükkan raflarını ve sepeti yeni gün öncesi tamamen sıfırla
+    cart = [];
+    renderCart();
+    initShopMedicines();
 }
 
 function triggerGameOverState() {
