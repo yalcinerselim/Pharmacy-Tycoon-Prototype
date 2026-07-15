@@ -1040,22 +1040,38 @@ function renderHandbook() {
 
 // Depo Satın Alma Onay Fonksiyonu
 function handleDepotConfirm() {
-    // Sepetteki her bir elemanın orijinal ilacını bulup buyPrice değerini oradan alıyoruz
-    let totalCost = cart.reduce((sum, item) => {
+    console.log("Satın alma işlemi başladı. Sepet içeriği:", cart);
+
+    if (cart.length === 0) {
+        alert("Sepetiniz boş!");
+        return;
+    }
+
+    // 1. Toplam maliyeti doğrudan medicines listesindeki orijinal fiyatlarla eşleştirerek hesapla
+    let totalCost = 0;
+    cart.forEach(item => {
         const originalMed = medicines.find(m => m.id === item.id);
-        const buyPrice = originalMed ? originalMed.buyPrice : 0;
-        return sum + (buyPrice * item.quantity);
-    }, 0);
+        if (originalMed) {
+            totalCost += originalMed.buyPrice * item.quantity;
+            console.log(`${originalMed.name} ürünü için maliyet: ${originalMed.buyPrice} x ${item.quantity} = ${originalMed.buyPrice * item.quantity}`);
+        } else {
+            console.warn(`ID'si ${item.id} olan ilaç medicines listesinde bulunamadı!`);
+        }
+    });
+
+    console.log("Hesaplanan Toplam Maliyet:", totalCost);
+    console.log("Mevcut Para:", money);
 
     if (money < totalCost) {
-        alert("Yetersiz Bütçe!");
+        alert("Yetersiz Bütçe! Gerekli: $" + totalCost + ", Sahip olunan: $" + money);
         return;
     }
     
-    // Parayı düş (Artık güvenli bir sayı)
+    // 2. Parayı kesin olarak düşür
     updateMoney(-totalCost);
+    console.log("Para düşürüldükten sonraki yeni bütçe:", money);
     
-    // Satın alınan ürünleri yoldaki siparişler listesine ekle
+    // 3. Satın alınan ürünleri yoldaki siparişler listesine ekle
     cart.forEach(item => {
         const originalMed = medicines.find(m => m.id === item.id);
         const medName = originalMed ? originalMed.name : "Bilinmeyen İlaç";
@@ -1069,10 +1085,10 @@ function handleDepotConfirm() {
     });
 
     alert(`Siparişleriniz verildi! İlaçların teslimat süresi 30 saniyedir.`);
+    
+    // 4. Önce arayüzleri ve siparişleri güncelle, en son sepeti sıfırla
     cart = [];
     renderCart();
-    
-    // Arayüzleri yenile
     initDepotMedicines();
     initShopMedicines();
 }
