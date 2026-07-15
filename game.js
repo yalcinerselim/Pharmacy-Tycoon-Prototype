@@ -121,7 +121,7 @@ const ageGroupsMap = {
 // === 3. MERKEZİ OYUN YÖNETİMİ (STATE & UI & LOOP) ===
 
 const GameState = {
-    money: 300,
+    money: 100,
     xp: 0,
     ep: 0,
     currentDayNumber: 1,
