@@ -155,25 +155,29 @@ const totalDaysLimit = 4;
 // === 4. SKOR VE BİRİM GÜNCELLEME FONKSİYONLARI ===
 
 function updateMoney(amount) {
-    // Gelen parametrenin geçerli bir sayı olduğunu garanti ediyoruz
+    // 1. Gelen parametreyi sayıya dönüştür, geçersizse işlemi iptal et
     const parsedAmount = Number(amount);
     if (isNaN(parsedAmount)) return;
 
-    // Global money değişkeninin sayı kaldığından emin oluyoruz
-    money = Number(money);
-    if (isNaN(money)) {
-        money = 300; // Eğer bir şekilde bozulduysa varsayılan değere dön
+    // 2. Global money değişkenini sayı olarak doğrula (NaN ise koruma sağla)
+    if (typeof money !== 'number' || isNaN(money)) {
+        money = 300; 
     }
 
+    // 3. Matematiksel eklemeyi yap
     money += parsedAmount;
 
+    // 4. Arayüzü güncelle (Arayüzden okuma yapmıyoruz, doğrudan temiz değişkeni yazıyoruz)
     const display = document.getElementById('moneyDisplay');
-    if (!display) return;
-    display.innerText = `$${money}`;
-    display.classList.remove('money-gain');
-    display.offsetHeight; 
-    display.classList.add('money-gain');
-    setTimeout(() => display.classList.remove('money-gain'), 600);
+    if (display) {
+        display.innerText = `$${money}`;
+        
+        // Animasyon tetikleme
+        display.classList.remove('money-gain');
+        display.offsetHeight; // Reflow tetikler
+        display.classList.add('money-gain');
+        setTimeout(() => display.classList.remove('money-gain'), 600);
+    }
 }
 
 function updateXp(amount) {
@@ -1180,16 +1184,22 @@ window.updateCartItemQuantity = updateCartItemQuantity;
 
 // Uygulama yüklenme döngüsü
 document.addEventListener("DOMContentLoaded", () => {
-    initShopMedicines();
-    initDepotMedicines();
+    initShopMedicines(); //[cite: 5]
+    initDepotMedicines(); //[cite: 5]
+    
+    // Sayfa ilk açıldığında paradaki $300 yazısını değişkenle eşitleyip temizliyoruz
+    const display = document.getElementById('moneyDisplay');
+    if (display) {
+        display.innerText = `$${money}`;
+    }
     
     // Telefonun kilit ekranı butonlarını varsayılan olarak kesin olarak gizle
-    const switcher = document.getElementById('appSwitcherTabs');
+    const switcher = document.getElementById('appSwitcherTabs'); //[cite: 5]
     if (switcher) {
-        switcher.style.display = 'none';
+        switcher.style.display = 'none'; //[cite: 5]
     }
     
     // Hastaları belirle ve kilit ekranı bildirimlerini bas
-    generateRandomCustomersForDay();
-    updateLockScreenNotification();
+    generateRandomCustomersForDay(); //[cite: 5]
+    updateLockScreenNotification(); //[cite: 5]
 });
