@@ -172,10 +172,14 @@ const UIController = {
         const el = document.getElementById(elementId);
         if(!el) return;
         el.innerText = text;
-        el.classList.remove(animClass);
-        void el.offsetHeight; 
-        el.classList.add(animClass);
-        setTimeout(() => el.classList.remove(animClass), 600);
+        
+        // Animasyon sınıfı geçerli bir değerse işlemi yap
+        if (animClass) {
+            el.classList.remove(animClass);
+            void el.offsetHeight; 
+            el.classList.add(animClass);
+            setTimeout(() => el.classList.remove(animClass), 600);
+        }
     },
     updateTimerBar: function() {
         const bar = document.getElementById('timerBar');
@@ -1027,8 +1031,12 @@ window.updateCartItemQuantity = updateCartItemQuantity;
 document.addEventListener("DOMContentLoaded", () => {
     initShopMedicines();
     initDepotMedicines();
-    UIController.updateStat('moneyDisplay', `$${GameState.money}`, '');
+    
+    // Boş string ('') yerine null geçiyoruz ki DOMException hatası fırlatmasın
+    UIController.updateStat('moneyDisplay', `$${GameState.money}`, null);
     UIController.setDisplay('appSwitcherTabs', 'none');
+    
+    // Artık kod yukarıda kesilmeyeceği için müşteriler başarıyla oluşacak
     generateRandomCustomersForDay();
     updateLockScreenNotification();
 });
