@@ -155,9 +155,14 @@ const totalDaysLimit = 4;
 // === 4. SKOR VE BİRİM GÜNCELLEME FONKSİYONLARI ===
 
 function updateMoney(amount) {
-    // 1. Gelen parametreyi sayıya dönüştür, geçersizse işlemi iptal et
-    const parsedAmount = Number(amount);
-    if (isNaN(parsedAmount)) return;
+    // 1. Gelen parametreyi sayıya dönüştür
+    let parsedAmount = Number(amount);
+    
+    // Eğer parametre geçersizse (NaN ise), işlemi iptal et
+    if (isNaN(parsedAmount)) {
+        console.error("Geçersiz para miktarı:", amount);
+        return;
+    }
 
     // 2. Global money değişkenini sayı olarak doğrula (NaN ise koruma sağla)
     if (typeof money !== 'number' || isNaN(money)) {
@@ -167,14 +172,14 @@ function updateMoney(amount) {
     // 3. Matematiksel eklemeyi yap
     money += parsedAmount;
 
-    // 4. Arayüzü güncelle (Arayüzden okuma yapmıyoruz, doğrudan temiz değişkeni yazıyoruz)
+    // 4. Arayüzü güncelle
     const display = document.getElementById('moneyDisplay');
     if (display) {
         display.innerText = `$${money}`;
         
         // Animasyon tetikleme
         display.classList.remove('money-gain');
-        display.offsetHeight; // Reflow tetikler
+        void display.offsetHeight; // Reflow tetikler (Kesin animasyon sıfırlama için 'void' eklendi)
         display.classList.add('money-gain');
         setTimeout(() => display.classList.remove('money-gain'), 600);
     }
