@@ -1035,20 +1035,29 @@ function renderHandbook() {
 
 // Depo Satın Alma Onay Fonksiyonu
 function handleDepotConfirm() {
-    let totalCost = cart.reduce((sum, item) => sum + (item.buyPrice * item.quantity), 0);
+    // Sepetteki her bir elemanın orijinal ilacını bulup buyPrice değerini oradan alıyoruz
+    let totalCost = cart.reduce((sum, item) => {
+        const originalMed = medicines.find(m => m.id === item.id);
+        const buyPrice = originalMed ? originalMed.buyPrice : 0;
+        return sum + (buyPrice * item.quantity);
+    }, 0);
+
     if (money < totalCost) {
         alert("Yetersiz Bütçe!");
         return;
     }
     
-    // Parayı düş
+    // Parayı düş (Artık güvenli bir sayı)
     updateMoney(-totalCost);
     
     // Satın alınan ürünleri yoldaki siparişler listesine ekle
     cart.forEach(item => {
+        const originalMed = medicines.find(m => m.id === item.id);
+        const medName = originalMed ? originalMed.name : "Bilinmeyen İlaç";
+        
         pendingOrders.push({
             id: item.id,
-            name: item.name,
+            name: medName,
             quantity: item.quantity,
             timeLeft: 30 // 30 saniye teslimat süresi
         });
