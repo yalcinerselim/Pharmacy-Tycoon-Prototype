@@ -506,13 +506,13 @@ function enterCustomerActiveState() {
 
 function triggerDayEndState() {
     systemState = 'DAY_END';
-    clearInterval(mainClockInterval);
+    if(mainClockInterval) clearInterval(mainClockInterval);
     const overlay = document.getElementById('customerOverlay');
     if (overlay) {
         overlay.style.display = 'flex';
         overlay.innerHTML = `
             <div class="customer-arrival-text" style="color: var(--warning-color);">Bugünlük ${dailyLimit} hasta limitine ulaşıldı. Gün Bitti!</div>
-            <button class="next-day-btn" onclick="progressToNextDay()">Yeni Güne Başla</button>
+            <button class="next-day-btn" onclick="progressToNextDay()">Günü Bitir</button>
         `;
     }
 }
@@ -522,33 +522,50 @@ function progressToNextDay() {
     dayServedCount = 0;
     gameStarted = false; 
     
+    // 1. Yeni günün müşterilerini arka planda belirle
     generateRandomCustomersForDay(); 
     
-    // Kilit ekranını tekrar görünür yap, el kitabını gizle
+    // 2. Kilit ekranını tekrar görünür yap, el kitabını ve Nabız uygulamasını gizle
     const lockArea = document.getElementById('lockScreenArea');
-    if (lockArea) {
+    if (lockArea && lockArea.style) {
         lockArea.style.setProperty('display', 'flex', 'important');
     }
     
     const handbookArea = document.getElementById('handbookArea');
-    if (handbookArea) {
+    if (handbookArea && handbookArea.style) {
         handbookArea.style.setProperty('display', 'none', 'important');
     }
     
-    // Uygulama sekmelerini tekrar gizle
+    const appNabiz = document.getElementById('appNabizContainer');
+    if (appNabiz && appNabiz.style) {
+        appNabiz.style.setProperty('display', 'none', 'important');
+    }
+    
+    // 3. Telefonun üst uygulama sekmelerini gizle
     const switcher = document.getElementById('appSwitcherTabs');
-    if (switcher) {
+    if (switcher && switcher.style) {
         switcher.style.setProperty('display', 'none', 'important');
     }
     
+    // 4. Nabız çözümlenmiş rapor ekranını temizle ve sıfırla
+    document.getElementById('nabizPrescriptionReport').style.display = 'none';
+    switchPhoneApp('HANDBOOK'); // Varsayılan olarak El Kitabı sekmesine konumlandır
+    
+    // 5. Belirlenen yeni gün hastalıklarını kilit ekranı bildirim listesine doldur
     updateLockScreenNotification();
     
+    // 6. Saat ve panelleri ilk durumuna getir
     document.getElementById('lockScreenClock').innerText = "08:00";
     
     if(mainClockInterval) clearInterval(mainClockInterval);
     document.getElementById('c-prescription-code').innerText = "--";
-    document.getElementById('customerOverlay').style.display = 'flex';
-    document.getElementById('customerOverlay').innerHTML = `<div class="customer-arrival-text">Günü başlatmanız bekleniyor... Müşteriler yolda.</div>`;
+    
+    // 7. Sağ taraftaki dükkan paneline müşterilerin beklendiği uyarısını koy
+    const overlay = document.getElementById('customerOverlay');
+    if (overlay) {
+        overlay.style.display = 'flex';
+        overlay.innerHTML = `<div class="customer-arrival-text">Günü başlatmanız bekleniyor... Müşteriler yolda.</div>`;
+    }
 }
 
 function triggerGameOverState() {
