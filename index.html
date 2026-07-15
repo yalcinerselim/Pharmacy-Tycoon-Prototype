@@ -234,14 +234,15 @@
                     <div id="timerBar" class="timer-bar"></div>
                 </div>
 
-                <!-- Sadece Reçete Kodu ve Çözümleme Uyarısı Barındıran Yeni Temiz Yapı -->
+               <!-- Sadece Reçete Kodu ve Çözümleme Uyarısı Barındıran Yeni Temiz Yapı -->
                 <div id="customerGrid" class="customer-grid" style="margin-top: 14px; grid-template-columns: 1fr;">
-                    <div class="data-field" style="background: rgba(59, 130, 246, 0.1); border: 2px solid var(--primary-color); border-radius: 8px; padding: 20px; text-align: center;">
+                    <div class="data-field prescription-display">
                         <div class="label" style="font-weight: bold; color: var(--accent-color); font-size: 1rem; margin-bottom: 6px; letter-spacing: 1px;">ÇÖZÜLMESİ GEREKEN REÇETE KODU</div>
                         <div class="value" id="c-prescription-code" style="font-size: 2.2rem; font-weight: 800; color: #ffffff; letter-spacing: 3px; text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);">--</div>
                     </div>
                     
-                    <div id="nabizLockWarning" style="background: rgba(239, 68, 68, 0.1); border: 1px dashed var(--danger-color); border-radius: 8px; padding: 12px; text-align: center; color: #f87171; font-size: 0.85rem; font-weight: 600;">
+                    <!-- Uyarı mesajı artık hidden sınıfı ile varsayılan olarak gizli -->
+                    <div id="nabizLockWarning" class="warning-box hidden">
                         ⚠️ Dikkat: Nabız uygulamasında bu reçete kodunu çözümlemeden ilaç satışı yapamazsınız!
                     </div>
                 </div>
