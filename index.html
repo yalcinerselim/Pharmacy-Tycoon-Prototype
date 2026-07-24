@@ -4,10 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Eczane Tycoon - Çoklu Gün ve Genişletilmiş Hasta Sistemi</title>
-    <!-- Harici stil dosyamızı bağlıyoruz -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+    <!-- Oyun Duraklatıldı Katmanı (Pause Overlay) -->
+    <div id="pauseOverlay" class="pause-overlay" style="display: none;">
+        <div class="pause-box">
+            <h2>⏸️ OYUN DURAKLATILDI</h2>
+            <p>Devam etmek için <strong>P</strong> tuşuna basın veya aşağıdaki butona tıklayın.</p>
+            <button class="resume-btn" onclick="togglePauseGame()">Devam Et</button>
+        </div>
+    </div>
 
     <!-- Tedavi Sonuç Raporu (Modal) -->
     <div id="resultModal" class="modal-back" style="display: none;">
@@ -19,20 +27,39 @@
         </div>
     </div>
 
+    <!-- Captcha (İnsan Doğrulama) Modal -->
+    <div id="captchaModal" class="modal-back" style="display: none; z-index: 3000;">
+        <div class="modal-box captcha-box">
+            <div class="captcha-header">
+                <h3>🤖 Güvenlik Doğrulaması (Captcha)</h3>
+                <p>Lütfen soldaki kelimelerin <strong>YAZI RENKLERİNİ</strong> sağdaki doğru renk toplarıyla eşleştirin.</p>
+            </div>
+            
+            <div class="captcha-body">
+                <!-- Sol Panel: Kelimeler -->
+                <div id="captchaWordsContainer" class="captcha-column"></div>
+                
+                <!-- Sağ Panel: Renk Topları -->
+                <div id="captchaBallsContainer" class="captcha-column"></div>
+            </div>
+            
+            <div id="captchaStatus" class="captcha-status">Bir kelime seçin, ardından rengine tıklayın.</div>
+        </div>
+    </div>
+
     <!-- Ana Çalışma Alanı -->
     <div class="workspace">
         
-        <!-- SOL PANEL: Akıllı Telefon Mekaniği -->
+        <!-- SOL PANEL: Akıllı Telefon Arayüzü (Sadece Nabız) -->
         <div class="phone-container">
             <div class="phone-frame">
                 <div class="phone-notch"></div>
                 <div class="phone-screen" id="phoneScreen">
                     
                     <div class="phone-top-row" style="width: 100%;">
-                        <!-- Dinamik Başlık -->
-                        <div id="phoneAppTitle" class="phone-header" style="text-align: center; width: 100%;">Eczacı El Kitabı</div>
+                        <div id="phoneAppTitle" class="phone-header" style="text-align: center; width: 100%;">Nabız Sistemi</div>
                         
-                        <!-- Üçlü Gösterge Paneli -->
+                        <!-- Gösterge Paneli -->
                         <div class="phone-stats-container">
                             <div id="moneyDisplay" class="stat-box money" onclick="handleMoneyClick()">$300</div>
                             <div id="xpDisplay" class="stat-box xp">0 XP</div>
@@ -40,67 +67,38 @@
                         </div>
                     </div>
 
-                    <!-- Uygulama Seçim Menüsü (Başlangıçta gizli olacak, kilit açılınca gösterilecek) -->
-                    <div id="appSwitcherTabs" class="app-switcher-tabs" style="display: none !important; gap: 4px; margin-bottom: 12px; z-index: 10;">
-                        <button id="appBtnHandbook" class="app-tab-btn active" onclick="switchPhoneApp('HANDBOOK')">El Kitabı</button>
-                        <button id="appBtnNabiz" class="app-tab-btn" onclick="switchPhoneApp('NABIZ')">Nabız</button>
-                    </div>
-                    
-                    <!-- === UYGULAMA 1: ECZACI EL KİTABI VE KİLİT EKRANI === -->
-                    <div id="appHandbookContainer" style="display: block; flex: 1; display: flex; flex-direction: column;">
-                        
-                        <!-- Kilit Ekranı Arayüzü (Günü Başlatmadan Önce Görünecek) -->
-                        <div id="lockScreenArea" style="display: flex; flex-direction: column; align-items: center; justify-content: space-between; flex: 1; padding: 20px 0;">
-                            <!-- Kilit Ekranı Saati ve Tarihi -->
-                            <div style="text-align: center; margin-bottom: 20px;">
-                                <div id="lockScreenClock" style="font-size: 3rem; font-weight: 300; letter-spacing: -1px; margin-bottom: 2px; color: #ffffff;">08:00</div>
-                                <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted);">Pazartesi</div>
-                            </div>
-                    
-                            <!-- Nabız Bildirim Kartı (Hastalıklar Burada Listelenecek) -->
-                            <div id="lockScreenNotification" style="background: rgba(255, 255, 255, 0.08); border-left: 4px solid #0284c7; border-radius: 12px; width: 100%; padding: 14px; margin-bottom: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.2); backdrop-filter: blur(5px);">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                    <div style="display: flex; align-items: center; gap: 6px;">
-                                        <span style="font-size: 0.9rem;">🩺</span>
-                                        <strong style="font-size: 0.78rem; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.5px;">Nabız Sistemi</strong>
-                                    </div>
-                                    <span style="font-size: 0.65rem; color: var(--text-muted);">Şimdi</span>
+                    <!-- Kilit Ekranı Arayüzü (Günü Başlatmadan Önce Görünecek) -->
+                    <div id="lockScreenArea" style="display: flex; flex-direction: column; align-items: center; justify-content: space-between; flex: 1; padding: 20px 0;">
+                        <div style="text-align: center; margin-bottom: 20px;">
+                            <div id="lockScreenClock" style="font-size: 3rem; font-weight: 300; letter-spacing: -1px; margin-bottom: 2px; color: #ffffff;">08:00</div>
+                            <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted);">Pazartesi</div>
+                        </div>
+                
+                        <div id="lockScreenNotification" style="background: rgba(255, 255, 255, 0.08); border-left: 4px solid #0284c7; border-radius: 12px; width: 100%; padding: 14px; margin-bottom: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.2); backdrop-filter: blur(5px);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <span style="font-size: 0.9rem;">🩺</span>
+                                    <strong style="font-size: 0.78rem; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.5px;">Nabız Sistemi</strong>
                                 </div>
-                                <div style="font-size: 0.85rem; font-weight: bold; margin-bottom: 6px; color: #f8fafc;">Günlük Hastalık Raporu Geldi!</div>
-                                <div style="font-size: 0.75rem; color: #cbd5e1; line-height: 1.4;">
-                                    Bugün yakınınızdaki sağlık ocağına gelen vakalar:
-                                    <ul id="lockScreenDiseaseList" style="margin-top: 6px; padding-left: 14px; list-style-type: disc;">
-                                        <!-- JavaScript tarafından dinamik doldurulacak -->
-                                    </ul>
-                                </div>
+                                <span style="font-size: 0.65rem; color: var(--text-muted);">Şimdi</span>
                             </div>
-                    
-                            <!-- Kilit Ekranı Buton Alanı -->
-                            <div style="width: 100%; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px;">
-                                <button id="startBtn" class="start-btn" onclick="startDay()" style="display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 50px; padding: 14px 20px;">
-                                    🔑 Günü Başlat
-                                </button>
-                                <span style="font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.5px;">Eczaneyi açmak için dokunun</span>
+                            <div style="font-size: 0.85rem; font-weight: bold; margin-bottom: 6px; color: #f8fafc;">Günlük Hastalık Raporu Geldi!</div>
+                            <div style="font-size: 0.75rem; color: #cbd5e1; line-height: 1.4;">
+                                Bugün yakınınızdaki sağlık kuruluşuna gelen şikayetlerdeki hastalık tipleri şu şekildedir:
+                                <ul id="lockScreenDiseaseList" style="margin-top: 6px; padding-left: 14px; list-style-type: disc;"></ul>
                             </div>
                         </div>
-                    
-                        <!-- Çift Sekmeli Filtrelenebilir El Kitabı (Telefon Açılınca Görünecek) -->
-                        <div id="handbookArea" class="handbook-content" style="display: none;">
-                            <div class="handbook-tabs">
-                                <button id="tabDiseases" class="handbook-tab-btn active" onclick="switchHandbookTab('DISEASES')">Hastalıklar</button>
-                                <button id="tabGroups" class="handbook-tab-btn" onclick="switchHandbookTab('GROUPS')">İlaç Grupları</button>
-                            </div>
-                            
-                            <select id="handbookFilter" class="handbook-filter-select" onchange="renderHandbook()"></select>
-                            
-                            <div id="knowledgeList"></div>
+                
+                        <div style="width: 100%; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                            <button id="startBtn" class="start-btn" onclick="handleLockScreenButtonClick()" style="display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 50px; padding: 14px 20px;">
+                                🔑 Oyunu Başlat
+                            </button>
+                            <span style="font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.5px;">Eczaneyi açmak için dokunun</span>
                         </div>
                     </div>
 
-                    <!-- === UYGULAMA 2: NABIZ === -->
+                    <!-- UYGULAMA: NABIZ -->
                     <div id="appNabizContainer" class="nabiz-app-theme" style="display: none;">
-                        
-                        <!-- Müşteri Verileri (Salt Okunur Giriş Alanları) -->
                         <div class="nabiz-input-group">
                             <label>Aktif Hasta</label>
                             <input type="text" id="nabizCustomerName" readonly placeholder="Müşteri bekleniyor...">
@@ -108,56 +106,12 @@
 
                         <div class="nabiz-input-group">
                             <label>Reçete Kodu</label>
-                            <input type="text" id="nabizPrescriptionCode" readonly placeholder="Müşteri bekleniyor...">
+                            <input type="text" id="nabizPrescriptionCode" readonly placeholder="Müşteri bekleniyor..." style="font-weight: 800; letter-spacing: 1.5px; color: #0284c7;">
                         </div>
 
                         <div class="nabiz-divider"></div>
 
-                        <!-- Çözümleme Alanı -->
-                        <h4 class="nabiz-section-title">Lütfen Reçete Kodunu Çözümleyiniz</h4>
-                        
-                        <div class="nabiz-input-group">
-                            <label>İlaç Grubu</label>
-                            <select id="nabizSolveGroup">
-                                <option value="">-- Seçiniz --</option>
-                                <option value="SLN-1">Soğuk Algınlığı ve Öksürük İlaçları</option>
-                                <option value="ANL-1">Ağrı Kesiciler ve Ateş Düşürücüler</option>
-                                <option value="DER-1">Pişik ve Cilt Bakım Kremleri</option>
-                                <option value="ANT-1">Alerji ve Kaşıntı İlaçları</option>
-                                <option value="SND-1">Mide ve Sindirim Düzenleyiciler</option>
-                                <option value="AGZ-1">Ağız Yarası ve Diş Jelleri</option>
-                            </select>
-                        </div>
-
-                        <div class="nabiz-input-group">
-                            <label>Hastalık</label>
-                            <select id="nabizSolveDisease">
-                                <option value="">-- Seçiniz --</option>
-                                <option value="HST-001">Alerjik Egzama</option>
-                                <option value="HST-002">Basit Baş Ağrısı</option>
-                                <option value="HST-003">Aft</option>
-                                <option value="HST-004">Hafif Böcek Isırığı</option>
-                                <option value="HST-005">Hafif Pişik</option>
-                                <option value="HST-006">Klimalı Oda Çarpması</option>
-                                <option value="HST-007">Hafif Hazımsızlık</option>
-                                <option value="HST-008">Toz Alerjisi</option>
-                                <option value="HST-009">Saman Nezlesi</option>
-                                <option value="HST-010">Hafif Üşütme</option>
-                                <option value="HST-011">Diş Çıkarma Ateşi</option>
-                            </select>
-                        </div>
-
-                        <div class="nabiz-input-group">
-                            <label>Yaş Grubu</label>
-                            <select id="nabizSolveAge">
-                                <option value="">-- Seçiniz --</option>
-                                <option value="AGE-1">Bebek</option>
-                                <option value="AGE-2">Çocuk</option>
-                                <option value="AGE-3">Yetişkin</option>
-                            </select>
-                        </div>
-
-                        <button class="nabiz-action-btn" onclick="verifyNabizCode()">Onayla ve Çözümle</button>
+                        <button class="nabiz-action-btn" onclick="confirmNabizAccess()">Onayla ve Bilgileri Getir</button>
 
                         <div class="nabiz-divider"></div>
 
@@ -167,8 +121,15 @@
                             <div class="prescription-row"><strong>Adı Soyadı:</strong> <span id="n-rep-name">-</span></div>
                             <div class="prescription-row"><strong>Hastalık:</strong> <span id="n-rep-disease">-</span></div>
                             <div class="prescription-row"><strong>Yaş Grubu:</strong> <span id="n-rep-age">-</span></div>
-                            <div class="prescription-row" style="margin-top: 8px; border-top: 1px dashed #cbd5e1; padding-top: 8px;">
-                                <strong>Önerilen İlaç:</strong> <span id="n-rep-med" class="text-success">-</span>
+                            
+                            <div class="prescription-row" style="margin-top: 10px; border-top: 1px dashed #cbd5e1; padding-top: 8px;">
+                                <strong>Önerilen İlaç:</strong>
+                                <div id="n-rep-med" class="nabiz-options-container" style="margin-top: 6px;">-</div>
+                            </div>
+
+                            <div class="prescription-row" style="margin-top: 10px; border-top: 1px dashed #cbd5e1; padding-top: 8px;">
+                                <strong>Envanterdeki Uygun Alternatifler:</strong>
+                                <div id="n-rep-options-list" class="nabiz-options-container" style="margin-top: 6px;"></div>
                             </div>
                         </div>
                     </div>
@@ -187,14 +148,18 @@
                         <span class="panel-title">Elde Bulunan İlaçlar</span>
                         <button class="nav-btn" style="margin-left: 10px;" onclick="switchToDepot()">İlaç Satın Al</button>
                     </div>
+                    <!-- Dükkan Filtre Butonları -->
                     <div class="filter-container" id="shopFilterContainer">
                         <button class="filter-btn active" onclick="filterShopMedicines('HEPSİ', this)">Hepsi</button>
-                        <button class="filter-btn" onclick="filterShopMedicines('SLN-1', this)">SLN-1</button>
-                        <button class="filter-btn" onclick="filterShopMedicines('ANL-1', this)">ANL-1</button>
-                        <button class="filter-btn" onclick="filterShopMedicines('DER-1', this)">DER-1</button>
-                        <button class="filter-btn" onclick="filterShopMedicines('ANT-1', this)">ANT-1</button>
-                        <button class="filter-btn" onclick="filterShopMedicines('SND-1', this)">SND-1</button>
-                        <button class="filter-btn" onclick="filterShopMedicines('AGZ-1', this)">AGZ-1</button>
+                        <button class="filter-btn" onclick="filterShopMedicines('Ağız & Diş Sağlığı', this)">Ağız & Diş</button>
+                        <button class="filter-btn" onclick="filterShopMedicines('Sistemik & Genel', this)">Sistemik & Genel</button>
+                        <button class="filter-btn" onclick="filterShopMedicines('Alerji', this)">Alerji</button>
+                        <button class="filter-btn" onclick="filterShopMedicines('Cilt & Dermatoloji', this)">Cilt & Derm.</button>
+                        <button class="filter-btn" onclick="filterShopMedicines('Göz', this)">Göz</button>
+                        <button class="filter-btn" onclick="filterShopMedicines('Nörolojik & Sinir', this)">Nörolojik & Sinir</button>
+                        <button class="filter-btn" onclick="filterShopMedicines('Kas & İskelet', this)">Kas & İskelet</button>
+                        <button class="filter-btn" onclick="filterShopMedicines('Solunum & KBB', this)">Solunum & KBB</button>
+                        <button class="filter-btn" onclick="filterShopMedicines('Sindirim & Mide', this)">Sindirim & Mide</button>
                     </div>
                 </div>
                 <div class="med-grid" id="medGrid"></div>
@@ -207,20 +172,24 @@
                         <span class="panel-title" style="color: var(--warning-color);">İlaç Deposu (Toptancı)</span>
                         <button class="nav-btn" style="margin-left: 10px; background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3); color: var(--success-color);" onclick="switchToShop()">Dükkana Geri Dön</button>
                     </div>
+                    <!-- Depo Filtre Butonları -->
                     <div class="filter-container" id="depotFilterContainer">
                         <button class="filter-btn active" onclick="filterDepotMedicines('HEPSİ', this)">Hepsi</button>
-                        <button class="filter-btn" onclick="filterDepotMedicines('SLN-1', this)">SLN-1</button>
-                        <button class="filter-btn" onclick="filterDepotMedicines('ANL-1', this)">ANL-1</button>
-                        <button class="filter-btn" onclick="filterDepotMedicines('DER-1', this)">DER-1</button>
-                        <button class="filter-btn" onclick="filterDepotMedicines('ANT-1', this)">ANT-1</button>
-                        <button class="filter-btn" onclick="filterDepotMedicines('SND-1', this)">SND-1</button>
-                        <button class="filter-btn" onclick="filterDepotMedicines('AGZ-1', this)">AGZ-1</button>
+                        <button class="filter-btn" onclick="filterDepotMedicines('Ağız & Diş Sağlığı', this)">Ağız & Diş</button>
+                        <button class="filter-btn" onclick="filterDepotMedicines('Sistemik & Genel', this)">Sistemik & Genel</button>
+                        <button class="filter-btn" onclick="filterDepotMedicines('Alerji', this)">Alerji</button>
+                        <button class="filter-btn" onclick="filterDepotMedicines('Cilt & Dermatoloji', this)">Cilt & Derm.</button>
+                        <button class="filter-btn" onclick="filterDepotMedicines('Göz', this)">Göz</button>
+                        <button class="filter-btn" onclick="filterDepotMedicines('Nörolojik & Sinir', this)">Nörolojik & Sinir</button>
+                        <button class="filter-btn" onclick="filterDepotMedicines('Kas & İskelet', this)">Kas & İskelet</button>
+                        <button class="filter-btn" onclick="filterDepotMedicines('Solunum & KBB', this)">Solunum & KBB</button>
+                        <button class="filter-btn" onclick="filterDepotMedicines('Sindirim & Mide', this)">Sindirim & Mide</button>
                     </div>
                 </div>
                 <div class="med-grid" id="depotMedGrid"></div>
             </div>
 
-            <!-- Orta Panel: Sadece Reçete Kodu Gösteren Panel -->
+            <!-- Orta Panel: Süre Sayacı ve Durum Uyarısı -->
             <div id="customerPanel" class="panel customer-panel">
                 <div class="customer-overlay" id="customerOverlay">
                     <div class="customer-arrival-text" id="overlayMessage">Günü başlatmanız bekleniyor... Müşteriler yolda.</div>
@@ -234,21 +203,14 @@
                     <div id="timerBar" class="timer-bar"></div>
                 </div>
 
-               <!-- Sadece Reçete Kodu ve Çözümleme Uyarısı Barındıran Yeni Temiz Yapı -->
                 <div id="customerGrid" class="customer-grid" style="margin-top: 14px; grid-template-columns: 1fr;">
-                    <div class="data-field prescription-display">
-                        <div class="label" style="font-weight: bold; color: var(--accent-color); font-size: 1rem; margin-bottom: 6px; letter-spacing: 1px;">ÇÖZÜLMESİ GEREKEN REÇETE KODU</div>
-                        <div class="value" id="c-prescription-code" style="font-size: 2.2rem; font-weight: 800; color: #ffffff; letter-spacing: 3px; text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);">--</div>
-                    </div>
-                    
-                    <!-- Uyarı mesajı artık hidden sınıfı ile varsayılan olarak gizli -->
-                    <div id="nabizLockWarning" class="warning-box hidden">
-                        ⚠️ Dikkat: Nabız uygulamasında bu reçete kodunu çözümlemeden ilaç satışı yapamazsınız!
+                    <div id="nabizLockWarning" class="warning-box">
+                        ⚠️ Dikkat: Nabız uygulamasından Onayla butonuna basmadan ilaç satışı yapamazsınız!
                     </div>
                 </div>
             </div>
 
-            <!-- Alt Panel: Dinamik Sepet -->
+            <!-- Alt Panel: Sepet -->
             <div class="panel cart-wrapper">
                 <div class="panel-title" id="cartTitle">Sepet (Müşteri Reçetesi)</div>
                 <div id="cartList" class="cart-list" style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
@@ -263,7 +225,6 @@
 
     </div>
 
-    <!-- Ana JavaScript mantığımızı modül olarak dahil ediyoruz -->
     <script src="game.js"></script>
 </body>
 </html>
