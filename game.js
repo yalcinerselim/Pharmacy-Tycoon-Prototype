@@ -220,6 +220,32 @@ const ageGroupsMap = {
 
 // === 3. MERKEZİ OYUN YÖNETİMİ (STATE & UI & LOOP) ===
 
+// === GÜVENLİ VERİ ERİŞİM KATMANI (DATA ACCESS LAYER) ===
+const GameData = {
+    getMedicineById: function(id) {
+        return medicines.find(m => m.id === id) || null;
+    },
+    
+    getDiseaseById: function(id) {
+        return diseases.find(d => d.id === id) || null;
+    },
+
+    getSymptomName: function(symptomId) {
+        return symptomNamesMap[symptomId] || symptomId;
+    },
+
+    getAgeGroupName: function(ageGroupId) {
+        return ageGroupsMap[ageGroupId] || ageGroupId;
+    },
+
+    // Semptom ID'sinden kök ID çıkarma mantığını tek yere topladık (örn: "SMP-017-1" -> "SMP-017")
+    extractSymptomRoot: function(symptomId) {
+        if (!symptomId) return "";
+        return symptomId.split('-').slice(0, 2).join('-');
+    }
+};
+
+// === MERKEZİ DURUM DEPOSU (STATE STORE) ===
 const GameState = {
     money: 100,
     xp: 0,
@@ -227,11 +253,10 @@ const GameState = {
     currentDayNumber: 1,
     dayServedCount: 0,
     dailyLimit: 5,
-    // totalDaysLimit kaldırıldı (Sonsuz Akış)
     timeRemaining: 10,
-    maxCustomerPatience: 30, // 60s -> 30s düşürüldü
-    nightDuration: 120,      // Gece süresi (2 dakika)
-    status: 'EMPTY_WAIT',    // 'EMPTY_WAIT', 'CUSTOMER_ACTIVE', 'NIGHT_ACTIVE'
+    maxCustomerPatience: 30,
+    nightDuration: 120,
+    status: 'EMPTY_WAIT', // 'EMPTY_WAIT', 'CUSTOMER_ACTIVE', 'NIGHT_ACTIVE', 'GAME_OVER'
     cart: [],
     pendingOrders: [],
     activeDayCustomers: [],
@@ -247,26 +272,27 @@ const GameState = {
     moneyClickCount: 0,
     moneyClickTimeout: null,
     isCaptchaActive: false,
-    dailyCaptchaTriggers: [], // Günün kaçıncı müşterilerinde captcha çıkacak
+    dailyCaptchaTriggers: [],
     selectedCaptchaWord: null,
-    captchaMatchedPairs: 0, 
+    captchaMatchedPairs: 0,
 
-    addMoney: function(amount) {
+    // Saf Mutasyon Fonksiyonları (Sadece veriyi değiştirir, UI'a dokunmaz)
+    modifyMoney: function(amount) {
         let parsed = Number(amount);
         if (!isNaN(parsed)) {
             this.money += parsed;
-            UIController.updateStat('moneyDisplay', `$${this.money}`, 'money-gain');
         }
+        return this.money;
     },
 
-    addXp: function(amount) {
+    modifyXp: function(amount) {
         this.xp = Math.max(0, this.xp + amount);
-        UIController.updateStat('xpDisplay', `${this.xp} XP`, 'stat-gain');
+        return this.xp;
     },
 
-    addEp: function(amount) {
+    modifyEp: function(amount) {
         this.ep += amount;
-        UIController.updateStat('epDisplay', `${this.ep} EP`, 'stat-gain');
+        return this.ep;
     },
 
     resetCart: function() {
@@ -274,6 +300,7 @@ const GameState = {
     }
 };
 
+// === UI KONTROLÖRÜ (UI CONTROLLER) ===
 const UIController = {
     updateStat: function(elementId, text, animClass) {
         const el = document.getElementById(elementId);
@@ -281,17 +308,24 @@ const UIController = {
         el.innerText = text;
         if (animClass) {
             el.classList.remove(animClass);
-            void el.offsetHeight;
+            void el.offsetHeight; // Reflow trigger
             el.classList.add(animClass);
             setTimeout(() => el.classList.remove(animClass), 600);
         }
+    },
+
+    // Tüm üst istatistik çubuğunu tek noktadan günceller
+    syncHeaderStats: function(animTarget = null) {
+        this.updateStat('moneyDisplay', `$${GameState.money}`, animTarget === 'money' ? 'money-gain' : null);
+        this.updateStat('xpDisplay', `${GameState.xp} XP`, animTarget === 'xp' ? 'stat-gain' : null);
+        this.updateStat('epDisplay', `${GameState.ep} EP`, animTarget === 'ep' ? 'stat-gain' : null);
     },
 
     updateTimerBar: function() {
         const bar = document.getElementById('timerBar');
         if (!bar) return;
         const maxDuration = (GameState.status === 'EMPTY_WAIT') ? 10 : GameState.maxCustomerPatience;
-        const percentage = (GameState.timeRemaining / maxDuration) * 100;
+        const percentage = Math.max(0, (GameState.timeRemaining / maxDuration) * 100);
         bar.style.transform = `scaleX(${percentage / 100})`;
     },
 
@@ -301,6 +335,7 @@ const UIController = {
     }
 };
 
+// === OYUN DÖNGÜSÜ (GAME LOOP ENGINE) ===
 const GameLoop = {
     interval: null,
 
@@ -314,46 +349,218 @@ const GameLoop = {
     },
 
     tick: function() {
+        // Kontrol şartları (Pause, Modal açıklığı vs.)
         if (GameState.isPaused || GameState.isWarningActive || GameState.isCaptchaActive ||
            document.getElementById('resultModal').style.display === 'flex') return;
 
-        this.processDeliveries(1); // Her saniye teslimat süresini 1 sn düşür
+        // 1. Yan süreçleri işle (Sipariş teslimatları)
+        this.processDeliveries(1);
+
+        // 2. Zamanı 1 saniye eksilt ve UI'ı senkronize et
         GameState.timeRemaining--;
         UIController.updateTimerBar();
 
+        // 3. Süre bittiyse durum yönetimine devret
         if (GameState.timeRemaining <= 0) {
-            if (GameState.status === 'EMPTY_WAIT') {
-                if (GameState.dayServedCount >= GameState.dailyLimit) {
-                    enterNightState(); // Gün bittiğinde geceye geç
-                } else {
-                    enterCustomerActiveState();
-                }
-            } else if (GameState.status === 'CUSTOMER_ACTIVE') {
-                handleCustomerTimeout();
-            } else if (GameState.status === 'NIGHT_ACTIVE') {
-                progressToNextDay(); // 2 dakikalık gece bittiğinde yeni güne geç
-            }
+            GameStateManager.handleTimeout();
         }
     },
 
     processDeliveries: function(secondsPassed = 1) {
-        if (GameState.pendingOrders.length > 0) {
-            GameState.pendingOrders.forEach(order => order.timeLeft -= secondsPassed);
-            const completedOrders = GameState.pendingOrders.filter(order => order.timeLeft <= 0);
+        if (GameState.pendingOrders.length === 0) return;
+
+        GameState.pendingOrders.forEach(order => order.timeLeft -= secondsPassed);
+        const completedOrders = GameState.pendingOrders.filter(order => order.timeLeft <= 0);
+
+        if (completedOrders.length > 0) {
             completedOrders.forEach(order => {
-                const med = medicines.find(m => m.id === order.id);
+                const med = GameData.getMedicineById(order.id);
                 if (med) med.count += order.quantity;
             });
+
             GameState.pendingOrders = GameState.pendingOrders.filter(order => order.timeLeft > 0);
-            if (completedOrders.length > 0) {
-                initDepotMedicines();
-                initShopMedicines();
-            }
+            
+            // UI Yenileme
+            initDepotMedicines();
+            initShopMedicines();
         }
     }
 };
 
+// === DURUM AKIŞ YÖNETİCİSİ (STATE FLOW MANAGER) ===
+const GameStateManager = {
+    handleTimeout: function() {
+        switch (GameState.status) {
+            case 'EMPTY_WAIT':
+                this.onEmptyWaitTimeout();
+                break;
+            case 'CUSTOMER_ACTIVE':
+                this.onCustomerTimeout();
+                break;
+            case 'NIGHT_ACTIVE':
+                this.onNightTimeout();
+                break;
+            default:
+                break;
+        }
+    },
+
+    onEmptyWaitTimeout: function() {
+        if (GameState.dayServedCount >= GameState.dailyLimit) {
+            enterNightState();
+        } else {
+            enterCustomerActiveState();
+        }
+    },
+
+    onCustomerTimeout: function() {
+        handleCustomerTimeout();
+    },
+
+    onNightTimeout: function() {
+        progressToNextDay();
+    }
+};
+
+// === MÜŞTERİ & İLAÇ UYUM HESAPLAYICI (BUSINESS LOGIC) ===
+const TreatmentEvaluator = {
+    // Müşterinin semptom köklerini döner
+    getCustomerSymptomRoots: function(customer) {
+        if (!customer || !customer.symptomsList) return [];
+        return customer.symptomsList.map(s => GameData.extractSymptomRoot(s));
+    },
+
+    // Bir ilacın veya ilaç grubunun müşteriyi ne kadar iyileştirdiğini hesaplar
+    evaluateTreatment: function(customer, selectedMedicineIds) {
+        const customerRoots = this.getCustomerSymptomRoots(customer);
+        const combinedMedSymptoms = [];
+
+        selectedMedicineIds.forEach(id => {
+            const med = GameData.getMedicineById(id);
+            if (med) {
+                combinedMedSymptoms.push(...med.symptoms);
+            }
+        });
+
+        const report = [];
+        let healedCount = 0;
+
+        customer.symptomsList.forEach(symptom => {
+            const root = GameData.extractSymptomRoot(symptom);
+            const isHealed = combinedMedSymptoms.some(mSym => mSym.trim() === root);
+            
+            if (isHealed) {
+                healedCount++;
+                report.push({ symptom: symptom, healed: true, name: GameData.getSymptomName(symptom) });
+            } else {
+                report.push({ symptom: symptom, healed: false, name: GameData.getSymptomName(symptom) });
+            }
+        });
+
+        return {
+            isPerfect: healedCount === customerRoots.length && customerRoots.length > 0,
+            healedCount: healedCount,
+            totalSymptoms: customerRoots.length,
+            reportDetails: report
+        };
+    }
+};
+
+// === AKILLI REÇETE VE KOMBİNASYON MOTORU ===
+const CombinationFinder = {
+    // Müşterinin semptomlarını tamamen çözen envanter kombinasyonlarını bulur
+    findValidCombinations: function(customer) {
+        const customerSymptomRoots = TreatmentEvaluator.getCustomerSymptomRoots(customer);
+        const customerAgeGroup = customer.ageGroupId;
+
+        // 1. Envanterde stoğu olan ve yaşa uygun ilaçları süz
+        const validInventoryMeds = medicines.filter(med => {
+            if (med.count <= 0) return false;
+            if (!med.compatibility.includes(customerAgeGroup)) return false;
+            return med.symptoms.some(medSym => customerSymptomRoots.includes(medSym));
+        });
+
+        let possibleCombinations = [];
+
+        // Tekli kombinasyonlar
+        validInventoryMeds.forEach(med => {
+            const treated = med.symptoms.filter(s => customerSymptomRoots.includes(s));
+            possibleCombinations.push({
+                meds: [med],
+                treatedSymptoms: [...new Set(treated)],
+                totalPrice: med.price
+            });
+        });
+
+        // İkili kombinasyonlar
+        for (let i = 0; i < validInventoryMeds.length; i++) {
+            for (let j = i + 1; j < validInventoryMeds.length; j++) {
+                const med1 = validInventoryMeds[i];
+                const med2 = validInventoryMeds[j];
+
+                const med1Treated = med1.symptoms.filter(s => customerSymptomRoots.includes(s));
+                const med2Treated = med2.symptoms.filter(s => customerSymptomRoots.includes(s));
+
+                // Kriter 1: İlaçlardan biri tek başına tüm semptomları çözüyorsa paketleme
+                if (med1Treated.length >= customerSymptomRoots.length || med2Treated.length >= customerSymptomRoots.length) {
+                    continue; 
+                }
+
+                // Kriter 2: İkinci ilaç yeni bir semptom çözmeli
+                if (!med2Treated.some(s => !med1Treated.includes(s))) {
+                    continue; 
+                }
+
+                const combinedSymptoms = [...new Set([...med1.symptoms, ...med2.symptoms])];
+                const treated = combinedSymptoms.filter(s => customerSymptomRoots.includes(s));
+                
+                possibleCombinations.push({
+                    meds: [med1, med2],
+                    treatedSymptoms: treated,
+                    totalPrice: med1.price + med2.price
+                });
+            }
+        }
+
+        // Doktorun reçete ettiği paketle birebir aynı olanları ele
+        const prescribedIds = Array.isArray(customer.prescribedMed) ? customer.prescribedMed : [customer.prescribedMed];
+        const prescribedSorted = prescribedIds.slice().sort().join(',');
+
+        possibleCombinations = possibleCombinations.filter(combo => {
+            const comboSorted = combo.meds.map(m => m.id).sort().join(',');
+            return comboSorted !== prescribedSorted;
+        });
+
+        // Kriter 3: Yalnızca TAM TEDAVİ sağlayan paketleri tut
+        possibleCombinations = possibleCombinations.filter(combo => 
+            combo.treatedSymptoms.length >= customerSymptomRoots.length
+        );
+
+        // Ucuzdan pahalıya sırala
+        return possibleCombinations.sort((a, b) => a.totalPrice - b.totalPrice);
+    }
+};
+
 // === 4. ÇEKİRDEK OYUN FONKSİYONLARI ===
+
+function setupInitialInventoryForFirstDay() {
+    // Tüm ilaçların stoklarını sıfırla
+    medicines.forEach(med => med.count = 0);
+
+    // İlk günün aktif hastalarının reçete edilen ilaçlarını tespit et
+    GameState.activeDayCustomers.forEach(customer => {
+        const prescribedIds = Array.isArray(customer.prescribedMed) 
+            ? customer.prescribedMed 
+            : [customer.prescribedMed];
+
+        prescribedIds.forEach(medId => {
+            const med = GameData.getMedicineById(medId);
+            if (med) {
+                med.count = 1; // Hastanın ihtiyacı olan ilacın stoğunu 1 yap
+            }
+        });
+    });
+}
 
 function togglePauseGame() {
     if (!GameState.gameStarted || GameState.status === 'DAY_END' || GameState.status === 'GAME_OVER') return;
@@ -376,9 +583,26 @@ function togglePauseGame() {
 function generateRandomCustomersForDay() {
     GameState.activeDayCustomers = [];
     GameState.currentCustomerIndex = 0;
+
+    // 1 Hafta = 3 Gün olarak belirlendi.
+    // İlk hafta (1, 2, 3. Günler) -> Sabit 5 müşteri
+    // Sonraki haftalar (4. Gün ve sonrası) -> 5 ile 10 arası rastgele müşteri
+    if (GameState.currentDayNumber <= 3) {
+        GameState.dailyLimit = 5;
+    } else {
+        GameState.dailyLimit = Math.floor(Math.random() * 6) + 5; // 5 ile 10 arası (inclusive)
+    }
+
     let availablePool = customers.filter(c =>
         !GameState.playedCustomersPool.some(played => played.id === c.id)
     );
+
+    // Eğer havuzda o günkü limit kadar müşteri kalmadıysa sıfırla (Sonsuz döngü / Devamlılık için)
+    if (availablePool.length < GameState.dailyLimit) {
+        GameState.playedCustomersPool = [];
+        availablePool = [...customers];
+    }
+
     for (let i = 0; i < GameState.dailyLimit; i++) {
         if (availablePool.length === 0) break;
         const randomIndex = Math.floor(Math.random() * availablePool.length);
@@ -419,23 +643,22 @@ function updateLockScreenNotification() {
 }
 
 function generatePrescriptionCodeForCustomer(customer) {
+    if (!customer || !customer.prescribedMed) return "HATA-KOD";
+
     const medId = Array.isArray(customer.prescribedMed) ? customer.prescribedMed[0] : customer.prescribedMed;
-    const med = medicines.find(m => m.id === medId);
+    const med = GameData.getMedicineById(medId);
+    
     if (!med) return "HATA-KOD";
 
-    const cleanGroup = med.group.replace('-', '');
+    const cleanGroup = med.group.replace(/[^a-zA-Z0-9]/g, ''); // Özel karakter temizliği
     const cleanDisease = cleanIdToNoZero(customer.disease);
+    const cleanAge = cleanIdToNoZero(customer.ageGroupId);
 
-    let ageId = customer.ageGroupId;
-    if (ageId === "AGE-1") ageId = "AGE1";
-    else if (ageId === "AGE-2") ageId = "AGE2";
-    else if (ageId === "AGE-3") ageId = "AGE3";
-    else ageId = cleanIdToNoZero(ageId);
-
-    return `${cleanGroup}-${cleanDisease}-${ageId}`;
+    return `${cleanGroup}-${cleanDisease}-${cleanAge}`;
 }
 
 function cleanIdToNoZero(idStr) {
+    if (!idStr) return "";
     return idStr.replace('-', '').replace(/^([A-Z]+)0+(\d+)/, '$1$2');
 }
 
@@ -542,6 +765,11 @@ function initDepotMedicines() {
             </div>`;
         }
 
+        // Stok durumuna göre renk değişimi (Stok 0 ise kırmızımsı uyarı rengi, değilse standart mavi)
+        const stockStyle = med.count === 0 
+            ? 'background: rgba(239, 68, 68, 0.15); color: #f87171;' 
+            : 'background: rgba(59, 130, 246, 0.1); color: var(--accent-color);';
+
         card.innerHTML = `
             <div class="med-header">
                 <div class="med-info"><h4>${med.name}</h4></div>
@@ -549,8 +777,9 @@ function initDepotMedicines() {
             </div>
             <div class="prices-row">
                 <span class="price-buy">Maliyet: $${med.buyPrice}</span>
-                <span class="price-sell">Tavsiye Satış: $${med.price}</span>
+                <span class="stock-tag" style="${stockStyle}">Stok: ${med.count} ad.</span>
             </div>
+            <div class="med-compatibility"><strong>Tavsiye Satış:</strong> <span class="price-sell">$${med.price}</span></div>
             <div class="med-compatibility"><strong>Tedavi:</strong> ${turkishSymptoms}</div>
             <div class="med-compatibility"><strong>Uygunluk:</strong> ${compatibilityNames}</div>
             ${deliveryBadge}
@@ -630,8 +859,9 @@ function confirmNabizAccess() {
     const prescribedIds = Array.isArray(currentCustomer.prescribedMed)
         ? currentCustomer.prescribedMed
         : [currentCustomer.prescribedMed];
-    const prescribedMeds = prescribedIds.map(id => medicines.find(m => m.id === id)).filter(Boolean);
-    const diseaseObj = diseases.find(d => d.id === currentCustomer.disease);
+    
+    const prescribedMeds = prescribedIds.map(id => GameData.getMedicineById(id)).filter(Boolean);
+    const diseaseObj = GameData.getDiseaseById(currentCustomer.disease);
     GameState.isNabizVerified = true;
 
     // 1. Temel Bilgileri Yazdır
@@ -639,7 +869,7 @@ function confirmNabizAccess() {
     document.getElementById('n-rep-disease').innerText = diseaseObj ? diseaseObj.name : "Bilinmiyor";
     document.getElementById('n-rep-age').innerText = currentCustomer.ageGroup;
 
-    // 2. Doktorun Reçete Ettiği İlaç Kombinasyonunu Oluştur
+    // 2. Doktor Reçetesi Butonu
     const recMedContainer = document.getElementById('n-rep-med');
     recMedContainer.innerHTML = '';
 
@@ -675,78 +905,12 @@ function confirmNabizAccess() {
         recMedContainer.innerText = "Önerilen Reçete Bulunamadı";
     }
 
-    // 3. Envanterdeki İlaçlardan Kombinasyonlar Oluşturma (1 ve 2'li Paketler)
+    // 3. Envanterdeki Alternatif Kombinasyonları Render Et
     const availableOptionsList = document.getElementById('n-rep-options-list');
     availableOptionsList.innerHTML = '';
 
-    const customerSymptomRoots = currentCustomer.symptomsList.map(s => s.split('-').slice(0, 2).join('-'));
-    const customerAgeGroup = currentCustomer.ageGroupId;
-
-    const validInventoryMeds = medicines.filter(med => {
-        if (med.count <= 0) return false;
-        if (!med.compatibility.includes(customerAgeGroup)) return false;
-        return med.symptoms.some(medSym => customerSymptomRoots.includes(medSym));
-    });
-
-    let possibleCombinations = [];
-
-    // Tekli kombinasyonlar
-    validInventoryMeds.forEach(med => {
-        const treated = med.symptoms.filter(s => customerSymptomRoots.includes(s));
-        possibleCombinations.push({
-            meds: [med],
-            treatedSymptoms: [...new Set(treated)],
-            totalPrice: med.price
-        });
-    });
-
-    // İkili kombinasyonlar
-    for (let i = 0; i < validInventoryMeds.length; i++) {
-        for (let j = i + 1; j < validInventoryMeds.length; j++) {
-            const med1 = validInventoryMeds[i];
-            const med2 = validInventoryMeds[j];
-
-            const med1Treated = med1.symptoms.filter(s => customerSymptomRoots.includes(s));
-            const med2Treated = med2.symptoms.filter(s => customerSymptomRoots.includes(s));
-
-            // KRİTER 1: İlaçlardan biri tek başına TÜM semptomları çözüyorsa yanına 2. bir ilaç paketleme
-            const med1IsFullMatch = med1Treated.length >= customerSymptomRoots.length;
-            const med2IsFullMatch = med2Treated.length >= customerSymptomRoots.length;
-            if (med1IsFullMatch || med2IsFullMatch) {
-                continue; 
-            }
-
-            // KRİTER 2: İkinci ilaç, birincinin çözmediği EN AZ BİR yeni semptomu çözmeli
-            const med2AddsNewSymptom = med2Treated.some(s => !med1Treated.includes(s));
-            if (!med2AddsNewSymptom) {
-                continue; 
-            }
-
-            const combinedSymptoms = [...new Set([...med1.symptoms, ...med2.symptoms])];
-            const treated = combinedSymptoms.filter(s => customerSymptomRoots.includes(s));
-            
-            possibleCombinations.push({
-                meds: [med1, med2],
-                treatedSymptoms: treated,
-                totalPrice: med1.price + med2.price
-            });
-        }
-    }
-
-    // Reçetedeki ilaç paketiyle birebir aynı olanları ele
-    const prescribedIdsSorted = prescribedIds.slice().sort().join(',');
-    possibleCombinations = possibleCombinations.filter(combo => {
-        const comboIdsSorted = combo.meds.map(m => m.id).sort().join(',');
-        return comboIdsSorted !== prescribedIdsSorted;
-    });
-
-    // KRİTER 3: Yalnızca TAM TEDAVİ sağlayan paketleri tut (Kısmi tedavileri ele)
-    possibleCombinations = possibleCombinations.filter(combo => 
-        combo.treatedSymptoms.length >= customerSymptomRoots.length
-    );
-
-    // Sıralama: En ucuz seçenekler üstte olsun
-    possibleCombinations.sort((a, b) => a.totalPrice - b.totalPrice);
+    const possibleCombinations = CombinationFinder.findValidCombinations(currentCustomer);
+    const customerSymptomRoots = TreatmentEvaluator.getCustomerSymptomRoots(currentCustomer);
 
     if (possibleCombinations.length > 0) {
         possibleCombinations.forEach(combo => {
@@ -810,7 +974,11 @@ function addToCartDirect(medId) {
 
 function enterNightState() {
     GameState.status = 'NIGHT_ACTIVE';
-    GameState.timeRemaining = GameState.nightDuration; // 120 saniye
+    
+    // İlk gece ise 300 saniye (5 dk), diğer geceler 120 saniye (2 dk)
+    const isFirstNight = GameState.currentDayNumber === 1;
+    GameState.timeRemaining = isFirstNight ? 300 : GameState.nightDuration;
+    
     GameState.gameStarted = false; // Telefon kilit ekranına düşecek
 
     // 1. Bir sonraki günün müşterilerini şimdiden seç ve kilit ekranı bildirimini güncelle
@@ -824,15 +992,16 @@ function enterNightState() {
 
     // 3. Kilit ekranı saatini ve butonunu güncelle
     const lockClock = document.getElementById('lockScreenClock');
-    if (lockClock) lockClock.innerText = "22:00"; // Gece saati sembolik
+    if (lockClock) lockClock.innerText = "22:00"; 
 
     const startBtn = document.getElementById('startBtn');
+    const nightMinutesText = isFirstNight ? "5 Dk" : "2 Dk";
     if (startBtn) {
-        startBtn.innerHTML = "⏩ Geceyi Geç (2 Dk)";
+        startBtn.innerHTML = `⏩ Geceyi Geç (${nightMinutesText})`;
     }
 
     // 4. Panel Başlığı ve Overlay Güncellemesi
-    document.getElementById('customerPanelTitle').innerText = `Gün ${GameState.currentDayNumber} - Gece Vakti (2 Dk)`;
+    document.getElementById('customerPanelTitle').innerText = `Gün ${GameState.currentDayNumber} - Gece Vakti (${nightMinutesText})`;
     document.getElementById('timerBar').className = "timer-bar waiting";
     UIController.updateTimerBar();
 
@@ -841,7 +1010,7 @@ function enterNightState() {
         UIController.setDisplay('customerOverlay', 'flex');
         overlay.innerHTML = `
             <div class="customer-arrival-text" style="color: #60a5fa;">
-                🌙 Eczane Kapalı (Gece Vakti)<br>
+                🌙 Eczane Kapalı (Gece Vakti - ${nightMinutesText})<br>
                 <span style="font-size:0.85rem; color:var(--text-muted); font-weight:normal;">
                     Depo siparişlerinizi verebilir veya kilit ekranından geceyi geçebilirsiniz.
                 </span>
@@ -862,11 +1031,14 @@ function handleLockScreenButtonClick() {
 function skipNight() {
     if (GameState.status !== 'NIGHT_ACTIVE') return;
 
-    // 120 saniyelik sipariş teslimatlarını anında simüle et
-    GameLoop.processDeliveries(GameState.nightDuration);
+    // O anki gecenin toplam süresini (300sn veya 120sn) tespit et
+    const currentNightTime = (GameState.currentDayNumber === 1) ? 300 : GameState.nightDuration;
+
+    // Teslimatları gecenin süresi kadar öne alıp anında tamamla
+    GameLoop.processDeliveries(currentNightTime);
 
     GameState.timeRemaining = 0;
-    progressToNextDay();
+    GameStateManager.onNightTimeout();
 }
 
 function progressToNextDay() {
@@ -875,8 +1047,18 @@ function progressToNextDay() {
     GameState.gameStarted = true;
     GameState.isPaused = false;
 
+    // Hafta ve Gün hesaplaması (1 Hafta = 3 Gün)
+    const currentWeek = Math.floor((GameState.currentDayNumber - 1) / 3) + 1;
+    const dayOfCurrentWeek = ((GameState.currentDayNumber - 1) % 3) + 1;
+
     const lockClock = document.getElementById('lockScreenClock');
     if (lockClock) lockClock.innerText = "08:00";
+
+    // Kilit ekranındaki gün alt başlığını güncelle (Örn: "2. HAFTA - 1. GÜN")
+    const lockDaySubtext = document.querySelector('#lockScreenArea style + div div:last-child');
+    if (lockDaySubtext) {
+        lockDaySubtext.innerText = `${currentWeek}. HAFTA - ${dayOfCurrentWeek}. GÜN`;
+    }
 
     // Buton metnini sıfırla
     const startBtn = document.getElementById('startBtn');
@@ -927,8 +1109,9 @@ function triggerGameOverState() {
 
 function handleCustomerTimeout() {
     const currentCustomer = GameState.activeDayCustomers[GameState.currentCustomerIndex];
-    GameState.addXp(0);
-    GameState.addEp(-10);
+    GameState.modifyXp(0);
+    GameState.modifyEp(-10);
+    UIController.syncHeaderStats('ep');
 
     document.getElementById('m-title').innerText = `${currentCustomer.name} Eczaneyi Terk Etti!`;
     document.getElementById('m-desc').innerHTML = `
@@ -986,11 +1169,12 @@ function filterDepotMedicines(group, btn) {
 }
 
 function addToCart(medId) {
-    if (GameState.isPaused || GameState.isWarningActive || GameState.status === 'DAY_END' || GameState.status === 'GAME_OVER') return;
-    const med = medicines.find(m => m.id === medId);
+    if (GameState.isPaused || GameState.status === 'GAME_OVER') return;
+    const med = GameData.getMedicineById(medId);
     if (!med) return;
 
     if (GameState.currentMode === 'SHOP') {
+        if (GameState.isWarningActive || GameState.status === 'DAY_END') return;
         if (!GameState.gameStarted || GameState.status !== 'CUSTOMER_ACTIVE') return;
         if (!GameState.isNabizVerified) {
             alert("⚠️ Lütfen önce Nabız uygulamasından 'Onayla ve Bilgileri Getir' butonuna basarak müşteri bilgilerini çekin!");
@@ -999,6 +1183,7 @@ function addToCart(medId) {
         if (med.count <= 0 || GameState.cart.length >= 2 || GameState.cart.some(item => item.id === medId)) return;
         GameState.cart.push({ id: medId, quantity: 1 });
     } else {
+        // DEPOT Modu: Kısıtlamalara takılmadan sepete ekleme yapabilir
         const existingItem = GameState.cart.find(item => item.id === medId);
         if (existingItem) existingItem.quantity += 1;
         else GameState.cart.push({ id: medId, quantity: 1 });
@@ -1038,22 +1223,21 @@ function renderCart() {
             return sum + ((originalMed ? originalMed.buyPrice : 0) * item.quantity);
         }, 0);
         titleElement.innerText = `Toptan Alım Sepeti (Toplam Tutar: $${totalCost})`;
-    } else {
-        titleElement.innerText = "Sepet (Müşteri Reçetesi)";
-    }
 
-    const isBlocked = GameState.cart.length === 0 || (GameState.currentMode === 'SHOP' && !GameState.isNabizVerified);
-
-    if (isBlocked) {
-        cartEmpty.style.display = GameState.cart.length === 0 ? 'block' : 'none';
-        submitBtn.disabled = true;
-        submitBtn.classList.remove('active');
-    } else {
-        cartEmpty.style.display = 'none';
-        if (!GameState.isWarningActive) {
+        // DEPOT Modu İçin Buton Kontrolü
+        if (GameState.cart.length === 0) {
+            cartEmpty.style.display = 'block';
+            submitBtn.disabled = true;
+            submitBtn.classList.remove('active', 'warning');
+            submitBtn.innerText = "Onayla";
+        } else {
+            cartEmpty.style.display = 'none';
             submitBtn.disabled = false;
             submitBtn.classList.add('active');
+            submitBtn.classList.remove('warning');
+            submitBtn.innerText = "Siparişi Onayla ve Satın Al";
         }
+
         GameState.cart.forEach(item => {
             const originalMed = medicines.find(m => m.id === item.id);
             if (!originalMed) return;
@@ -1064,33 +1248,68 @@ function renderCart() {
             itemDiv.style.alignItems = 'center';
             itemDiv.style.width = '100%';
 
-            if (GameState.currentMode === 'DEPOT') {
-                itemDiv.innerHTML = `
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <span>${originalMed.name} ($${originalMed.buyPrice})</span>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <input type="number" min="1" value="${item.quantity}"
-                               style="width: 50px; background: #262b37; border: 1px solid #3b82f6; color: white; border-radius: 4px; padding: 2px 4px; text-align: center; font-weight: bold;"
-                               onchange="updateCartItemQuantity('${item.id}', this.value)">
-                        <span class="cart-item-remove" onclick="removeFromCart('${item.id}')">×</span>
-                    </div>
-                `;
-            } else {
+            itemDiv.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span>${originalMed.name} ($${originalMed.buyPrice})</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <input type="number" min="1" value="${item.quantity}"
+                           style="width: 50px; background: #262b37; border: 1px solid #3b82f6; color: white; border-radius: 4px; padding: 2px 4px; text-align: center; font-weight: bold;"
+                           onchange="updateCartItemQuantity('${item.id}', this.value)">
+                    <span class="cart-item-remove" onclick="removeFromCart('${item.id}')">×</span>
+                </div>
+            `;
+            cartList.appendChild(itemDiv);
+        });
+
+    } else {
+        // SHOP Modu
+        titleElement.innerText = "Sepet (Müşteri Reçetesi)";
+        submitBtn.innerText = "Onayla";
+
+        const isBlocked = GameState.cart.length === 0 || !GameState.isNabizVerified;
+
+        if (isBlocked) {
+            cartEmpty.style.display = 'block';
+            submitBtn.disabled = true;
+            submitBtn.classList.remove('active');
+        } else {
+            cartEmpty.style.display = 'none';
+            if (!GameState.isWarningActive) {
+                submitBtn.disabled = false;
+                submitBtn.classList.add('active');
+            }
+
+            GameState.cart.forEach(item => {
+                const originalMed = medicines.find(m => m.id === item.id);
+                if (!originalMed) return;
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'cart-item';
+                itemDiv.style.display = 'flex';
+                itemDiv.style.justifyContent = 'space-between';
+                itemDiv.style.alignItems = 'center';
+                itemDiv.style.width = '100%';
+
                 itemDiv.innerHTML = `
                     <span>${originalMed.name}</span>
                     <span class="cart-item-remove" onclick="removeFromCart('${item.id}')">×</span>
                 `;
-            }
-            cartList.appendChild(itemDiv);
-        });
+                cartList.appendChild(itemDiv);
+            });
+        }
     }
 }
 
 function confirmPrescription() {
-    if (GameState.cart.length === 0 || GameState.isWarningActive || GameState.isPaused) return;
-    if (GameState.currentMode === 'SHOP') handleShopConfirm();
-    else handleDepotConfirm();
+    if (GameState.cart.length === 0) return;
+
+    if (GameState.currentMode === 'DEPOT') {
+        handleDepotConfirm();
+        return;
+    }
+
+    if (GameState.isWarningActive || GameState.isPaused) return;
+    handleShopConfirm();
 }
 
 function handleShopConfirm() {
@@ -1101,10 +1320,10 @@ function handleShopConfirm() {
 
     // Yaş uyumluluğu kontrolü
     for (let item of GameState.cart) {
-        const originalMed = medicines.find(m => m.id === item.id);
+        const originalMed = GameData.getMedicineById(item.id);
         if (originalMed) {
             const isAgeCompatible = originalMed.compatibility.some(ageId => {
-                const mappedAgeName = (ageGroupsMap[ageId] || "").trim().toLowerCase();
+                const mappedAgeName = GameData.getAgeGroupName(ageId).trim().toLowerCase();
                 return mappedAgeName === customerAge;
             });
             if (!isAgeCompatible) {
@@ -1125,41 +1344,39 @@ function handleShopConfirm() {
     }
 
     let totalProfit = 0;
-    let reportHTML = "";
-    let combinedMedSymptoms = [];
+    const selectedMedIds = GameState.cart.map(item => item.id);
 
+    // Stok düşürme ve kâr hesaplama
     GameState.cart.forEach(item => {
-        const targetMed = medicines.find(m => m.id === item.id);
+        const targetMed = GameData.getMedicineById(item.id);
         if (targetMed) {
             targetMed.count--;
             totalProfit += targetMed.price;
-            combinedMedSymptoms = combinedMedSymptoms.concat(targetMed.symptoms);
         }
     });
 
-    // Semptom iyileşme kontrolü (DÜZELTİLDİ: kök semptom ID üzerinden eşleştirme)
-    let healedCount = 0;
-    currentCustomer.symptomsList.forEach(symptom => {
-        const symptomRoot = symptom.split('-').slice(0, 2).join('-');
-        let isHealed = combinedMedSymptoms.some(mSym => mSym.trim() === symptomRoot);
-        if (isHealed) {
-            healedCount++;
-            reportHTML += `<li class="healed">İyileştirildi: <strong>${symptomNamesMap[symptom] || symptom}</strong></li>`;
+    // Merkezi Değerlendirme Modülümüzü Çalıştırıyoruz
+    const evaluation = TreatmentEvaluator.evaluateTreatment(currentCustomer, selectedMedIds);
+
+    let reportHTML = "";
+    evaluation.reportDetails.forEach(item => {
+        if (item.healed) {
+            reportHTML += `<li class="healed">İyileştirildi: <strong>${item.name}</strong></li>`;
         } else {
-            reportHTML += `<li class="failed">İyileştirilemedi: <strong>${symptomNamesMap[symptom] || symptom}</strong></li>`;
+            reportHTML += `<li class="failed">İyileştirilemedi: <strong>${item.name}</strong></li>`;
         }
     });
 
-    let isPerfectHeal = (healedCount === currentCustomer.symptomsList.length);
-    let earnedXp = isPerfectHeal ? 10 : 2;
-    let earnedEp = isPerfectHeal ? 5 : -5;
+    let earnedXp = evaluation.isPerfect ? 10 : 2;
+    let earnedEp = evaluation.isPerfect ? 5 : -5;
 
-    GameState.addMoney(totalProfit);
-    GameState.addXp(earnedXp);
-    GameState.addEp(earnedEp);
+    GameState.modifyMoney(totalProfit);
+    GameState.modifyXp(earnedXp);
+    GameState.modifyEp(earnedEp);
+    UIController.syncHeaderStats('money');
 
     document.getElementById('m-title').innerText = `${currentCustomer.name} - Teşhis Sonucu`;
-    let scoreColorClass = isPerfectHeal ? "color: var(--success-color);" : "color: var(--danger-color);";
+    let scoreColorClass = evaluation.isPerfect ? "color: var(--success-color);" : "color: var(--danger-color);";
     document.getElementById('m-desc').innerHTML = `
         Satılan ilaçlar başarıyla teslim edildi. Eczanenize <strong>+$${totalProfit}</strong> eklendi.<br><br>
         <strong>Kazanılan Deneyim:</strong> <span style="color: #a855f7; font-weight: bold;">+${earnedXp} XP</span><br>
@@ -1184,7 +1401,7 @@ function handleDepotConfirm() {
 
     let totalCost = 0;
     GameState.cart.forEach(item => {
-        const originalMed = medicines.find(m => m.id === item.id);
+        const originalMed = GameData.getMedicineById(item.id);
         if (originalMed) totalCost += originalMed.buyPrice * item.quantity;
     });
 
@@ -1193,9 +1410,13 @@ function handleDepotConfirm() {
         return;
     }
 
-    GameState.addMoney(-totalCost);
+    // 1. Bakiyeyi Düş ve UI'ı Güncelle
+    GameState.modifyMoney(-totalCost);
+    UIController.syncHeaderStats('money');
+
+    // 2. Siparişleri Teslimat Listesine Ekle (30 Saniye Teslimat)
     GameState.cart.forEach(item => {
-        const originalMed = medicines.find(m => m.id === item.id);
+        const originalMed = GameData.getMedicineById(item.id);
         GameState.pendingOrders.push({
             id: item.id,
             name: originalMed ? originalMed.name : "Bilinmeyen İlaç",
@@ -1204,7 +1425,9 @@ function handleDepotConfirm() {
         });
     });
 
-    alert(`Siparişleriniz verildi! İlaçların teslimat süresi 30 saniyedir.`);
+    alert(`Siparişiniz başarıyla alındı! $${totalCost} tutarındaki ilaçlar 30 saniye içinde depoya ulaşacaktır.`);
+
+    // 3. Sepeti Temizle ve Ekranı Yenile
     GameState.resetCart();
     renderCart();
     initDepotMedicines();
@@ -1227,8 +1450,8 @@ function handleMoneyClick() {
     GameState.moneyClickCount++;
     clearTimeout(GameState.moneyClickTimeout);
     if (GameState.moneyClickCount === 3) {
-        GameState.addMoney(200);
-        GameState.moneyClickCount = 0;
+        GameState.modifyMoney(200);
+        UIController.syncHeaderStats('money');
     } else {
         GameState.moneyClickTimeout = setTimeout(() => { GameState.moneyClickCount = 0; }, 400);
     }
@@ -1397,14 +1620,15 @@ document.addEventListener("keydown", (event) => {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
-    // 1. Başlangıçta tüm ilaç stoklarını 1 yap
-    medicines.forEach(med => med.count = 1);
+    // 1. İlk günün müşterilerini seç
+    generateRandomCustomersForDay();
 
+    // 2. İlk gün gelecek hastaların ilaçlarını stoklara ekle (diğerlerini 0 yap)
+    setupInitialInventoryForFirstDay();
+
+    // 3. Arayüzleri başlat
     initShopMedicines();
     initDepotMedicines();
     UIController.updateStat('moneyDisplay', `$${GameState.money}`, null);
-    
-    // İlk günün müşterilerini seç ve kilit ekranında göster
-    generateRandomCustomersForDay();
     updateLockScreenNotification();
 });
