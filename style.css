@@ -284,7 +284,14 @@ body {
 .nav-btn:hover { background: var(--accent-color); color: white; }
 
 /* Filtre Butonları */
-.filter-container { display: flex; gap: 6px; flex-wrap: wrap; }
+.filter-container { 
+    display: flex; 
+    gap: 6px; 
+    flex-wrap: wrap;
+    max-height: 80px; /* Çok fazla kategori eklendiğinde alanı dikeyde sınırlar */
+    overflow-y: auto;
+}
+
 .filter-btn {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--border-color);
@@ -320,8 +327,11 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    gap: 6px;
+    gap: 8px;
+    min-height: 110px; /* Yeni içerik eklendiğinde kartların çökmesini önler */
+    word-break: break-word; /* Uzun ilaç/semptom isimlerinde metnin dışarı taşmasını engeller */
 }
+
 .med-card:hover { background: rgba(59, 130, 246, 0.05); border-color: var(--accent-color); transform: translateY(-1px); }
 
 .med-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
