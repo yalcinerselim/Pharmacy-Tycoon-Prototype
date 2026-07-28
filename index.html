@@ -47,6 +47,36 @@
         </div>
     </div>
 
+    <!-- Nöbetçi Eczane Seçim Modalı -->
+    <div id="dutySelectModal" class="modal-back" style="display: none; z-index: 2500;">
+        <div class="modal-box" style="text-align: center;">
+            <h3 style="color: var(--warning-color);">🌙 Yeni Hafta: Nöbetçi Gün Seçimi</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">
+                Bu hafta hangi gün gece nöbetçisi olmak istersiniz? Seçim yapmadan yeni haftaya başlayamazsınız.
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button class="start-btn" onclick="selectDutyDay(1)">1. Gün (Nöbetçi)</button>
+                <button class="start-btn" onclick="selectDutyDay(2)">2. Gün (Nöbetçi)</button>
+                <button class="start-btn" onclick="selectDutyDay(3)">3. Gün (Nöbetçi)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- YENİ EKLENEN: Eczane Geliştirme Modalı -->
+    <div id="upgradeModal" class="modal-back" style="display: none; z-index: 2600;">
+        <div class="modal-box" style="max-width: 520px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="color: #a855f7; margin: 0;">🏗️ Eczane Geliştirmeleri</h3>
+                <button onclick="closeUpgradeModal()" style="background: none; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer;">✕</button>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px;">
+                Eczanenizin kapasitesini ve otomasyon seviyesini artırmak için gereken Eczane Puanına (EP) ulaşıp yatırımları tamamlayın.
+            </p>
+            <div id="upgradeList" style="display: flex; flex-direction: column; gap: 10px;"></div>
+            <button class="close-modal-btn" style="margin-top: 15px;" onclick="closeUpgradeModal()">Kapat</button>
+        </div>
+    </div>
+
     <!-- Ana Çalışma Alanı -->
     <div class="workspace">
         
@@ -59,11 +89,22 @@
                     <div class="phone-top-row" style="width: 100%;">
                         <div id="phoneAppTitle" class="phone-header" style="text-align: center; width: 100%;">Nabız Sistemi</div>
                         
-                        <!-- Gösterge Paneli -->
+                        <!-- index.html içerisinde .phone-stats-container bloğunu aşağıdaki ile değiştirin -->
                         <div class="phone-stats-container">
-                            <div id="moneyDisplay" class="stat-box money" onclick="handleMoneyClick()">$300</div>
+                            <div id="moneyDisplay" class="stat-box money" onclick="handleMoneyClick()">$1000</div>
                             <div id="xpDisplay" class="stat-box xp">0 XP</div>
                             <div id="epDisplay" class="stat-box ep">0 EP</div>
+                        </div>
+
+                        <!-- YENİ EKLENEN: Müşteri Memnuniyet Barı (phone-top-row içine, stats-container'ın hemen altına) -->
+                        <div class="satisfaction-container">
+                            <div class="satisfaction-header">
+                                <span>Müşteri Memnuniyeti</span>
+                                <strong id="satisfactionText">30 / 100</strong>
+                            </div>
+                            <div class="satisfaction-bar-bg">
+                                <div id="satisfactionBar" class="satisfaction-bar-fill" style="width: 30%;"></div>
+                            </div>
                         </div>
                     </div>
 
@@ -71,7 +112,7 @@
                     <div id="lockScreenArea" style="display: flex; flex-direction: column; align-items: center; justify-content: space-between; flex: 1; padding: 20px 0;">
                         <div style="text-align: center; margin-bottom: 20px;">
                             <div id="lockScreenClock" style="font-size: 3rem; font-weight: 300; letter-spacing: -1px; margin-bottom: 2px; color: #ffffff;">08:00</div>
-                            <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted);">Pazartesi</div>
+                            <div id="lockScreenDayText" style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted);">1. HAFTA - 1. GÜN</div>
                         </div>
                 
                         <div id="lockScreenNotification" style="background: rgba(255, 255, 255, 0.08); border-left: 4px solid #0284c7; border-radius: 12px; width: 100%; padding: 14px; margin-bottom: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.2); backdrop-filter: blur(5px);">
@@ -82,10 +123,8 @@
                                 </div>
                                 <span style="font-size: 0.65rem; color: var(--text-muted);">Şimdi</span>
                             </div>
-                            <div style="font-size: 0.85rem; font-weight: bold; margin-bottom: 6px; color: #f8fafc;">Günlük Hastalık Raporu Geldi!</div>
-                            <div style="font-size: 0.75rem; color: #cbd5e1; line-height: 1.4;">
-                                Bugün yakınınızdaki sağlık kuruluşuna gelen şikayetlerdeki hastalık tipleri şu şekildedir:
-                                <ul id="lockScreenDiseaseList" style="margin-top: 6px; padding-left: 14px; list-style-type: disc;"></ul>
+                            <div id="lockScreenNotificationText" style="font-size: 0.75rem; color: #cbd5e1; line-height: 1.4;">
+                                Değerli üyemiz, yeni iş gününde başarılar dileriz! Size tavsiyemiz yeni güne başlamadan önce stoklarınızı yenilemeniz.
                             </div>
                         </div>
                 
@@ -147,6 +186,8 @@
                     <div>
                         <span class="panel-title">Elde Bulunan İlaçlar</span>
                         <button class="nav-btn" style="margin-left: 10px;" onclick="switchToDepot()">İlaç Satın Al</button>
+                        <!-- YENİ EKLENEN: Eczaneyi Geliştir Butonu -->
+                        <button class="nav-btn" style="margin-left: 6px; background: rgba(168, 85, 247, 0.15); border-color: rgba(168, 85, 247, 0.4); color: #a855f7;" onclick="openUpgradeModal()">🏗️ Eczaneyi Geliştir</button>
                     </div>
                     <!-- Dükkan Filtre Butonları -->
                     <div class="filter-container" id="shopFilterContainer">
@@ -195,13 +236,19 @@
                     <div class="customer-arrival-text" id="overlayMessage">Günü başlatmanız bekleniyor... Müşteriler yolda.</div>
                 </div>
 
+                <!-- Başlık ve En Sağdaki Yeni Küçük Buton -->
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div class="panel-title" id="customerPanelTitle">Süre Sayacı</div>
+                    <button id="dismissCustomerBtn" class="dismiss-btn-small" onclick="dismissCustomerWithoutMedication()" title="Müşteriyi Bekletmeden Gönder">
+                        🚫 İlaçsız Gönder
+                    </button>
                 </div>
                 
                 <div class="timer-container">
                     <div id="timerBar" class="timer-bar"></div>
                 </div>
+
+                <!-- Eski <button id="dismissCustomerBtn" class="dismiss-btn"...> SİLİNDİ -->
 
                 <div id="customerGrid" class="customer-grid" style="margin-top: 14px; grid-template-columns: 1fr;">
                     <div id="nabizLockWarning" class="warning-box">
@@ -217,7 +264,6 @@
                     <div id="cartEmpty" class="cart-empty">Sepet boş. İlaç listesinden seçim yapın.</div>
                 </div>
                 <div class="action-container">
-                    <!-- disabled Özelliği kaldırıldı ve onclick kontrolü güncellendi -->
                     <button id="submitBtn" class="submit-btn active" onclick="confirmPrescription()">Onayla</button>
                 </div>
             </div>
