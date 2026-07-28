@@ -144,7 +144,7 @@ const upgradesList = [
         id: "UPG-3",
         title: "Otomatik Günlük Stok Yenileme",
         desc: "Eczane stokları her günün sonunda otomatik olarak maksimum kapasiteye yenilenir.",
-        reqEp: 500,
+        reqEp: 300,
         price: 2000,
         purchased: false,
         action: function() {
@@ -259,6 +259,9 @@ const GameState = {
     isDutyNightActive: false, // Gece nöbetinin aktif olup olmadığı
     dutyNextDayPenalty: false, // Gece nöbeti sonrası ertesi günün 5 müşteriyle kısıtlanması
     autoRestockEnabled: false, // 3. Geliştirme satın alındığında true olur
+    realStartTime: null,       // Oyunun gerçek başlama zamanı (timestamp)
+    elapsedRealSeconds: 0,     // Geçen toplam gerçek saniye
+    timerInterval: null,       // Kronometre döngüsü
 
     modifySatisfaction: function(amount) {
         this.satisfaction = Math.max(0, Math.min(100, this.satisfaction + amount));
@@ -625,11 +628,13 @@ function startDay() {
     
     if (GameState.gameStarted) return;
     GameState.gameStarted = true;
+
+    // Kronometreyi başlat
+    startRealTimer();
     
     UIController.setDisplay('lockScreenArea', 'none');
     UIController.setDisplay('appNabizContainer', 'flex');
     
-    // Zamanlayıcı ve ilk boş bekleme periyodu SADECE butona basıldığında başlar
     enterEmptyWaitState();
     GameLoop.start();
 }
@@ -1120,6 +1125,10 @@ function progressToNextDay() {
         medicines.forEach(med => {
             med.count = MAX_MEDICINE_STOCK;
         });
+        // Stoklar otomatik yenilendikten sonra Prototip Bitiş Modalı gösterilir
+        setTimeout(() => {
+            triggerGameCompletion();
+        }, 500);
     }
 
     generateRandomCustomersForDay();
@@ -1909,6 +1918,47 @@ function buyUpgrade(upgradeId) {
     alert(`🎉 Tebrikler! "${upg.title}" geliştirmesi başarıyla tamamlandı!`);
 }
 
+function triggerGameCompletion() {
+    GameState.status = 'GAME_OVER';
+    
+    // Kronometreyi ve Oyun Döngüsünü durdur
+    if (GameState.timerInterval) {
+        clearInterval(GameState.timerInterval);
+    }
+    GameLoop.stop();
+
+    // Süreyi Pop-up içerisine yazdır
+    const timeText = formatTimeSpan(GameState.elapsedRealSeconds);
+    const timeDisplayEl = document.getElementById('totalCompletionTime');
+    if (timeDisplayEl) {
+        timeDisplayEl.innerText = timeText;
+    }
+
+    const completeModal = document.getElementById('gameCompleteModal');
+    if (completeModal) {
+        completeModal.style.display = 'flex';
+    }
+}
+
+// Gerçek Zamanlı Kronometreyi Başlatan Yardımcı Fonksiyon
+function startRealTimer() {
+    if (GameState.timerInterval) return;
+    GameState.realStartTime = Date.now();
+    GameState.timerInterval = setInterval(() => {
+        if (!GameState.isPaused && GameState.status !== 'GAME_OVER') {
+            GameState.elapsedRealSeconds++;
+        }
+    }, 1000);
+}
+
+// Saniyeyi "XX dakika YY saniye" formatına dönüştüren yardımcı fonksiyon
+function formatTimeSpan(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    const minsText = mins > 0 ? `${mins} dakika ` : '';
+    return `${minsText}${secs} saniye`;
+}
+
 // === WINDOW BAĞLANTILARI & KLAVYE DİNLEYİCİSİ ===
 
 window.startDay = startDay;
@@ -1937,6 +1987,7 @@ window.dismissCustomerWithoutMedication = dismissCustomerWithoutMedication;
 window.openUpgradeModal = openUpgradeModal;
 window.closeUpgradeModal = closeUpgradeModal;
 window.buyUpgrade = buyUpgrade;
+window.triggerGameCompletion = triggerGameCompletion;
 
 document.addEventListener("keydown", (event) => {
     const activeElem = document.activeElement;
