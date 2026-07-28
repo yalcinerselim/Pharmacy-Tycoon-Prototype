@@ -1,5 +1,10 @@
 // game.js
 
+// STOK SINIRLAMASI SABİTİ
+let MAX_MEDICINE_STOCK = 2; // Başlangıç stok sınırı 2
+
+// === 1. VERİ MODELLERİ VE TABLOLARI ===
+
 // === 1. VERİ MODELLERİ VE TABLOLARI ===
 
 // === 1. SEMPTOMLAR (symptoms) ===
@@ -41,136 +46,111 @@ const diseaseTypes = [
 
 // === 3. HASTALIKLAR (diseases) ===
 const diseases = [
-    { id: "HST-001", name: "Dermaklinis", typeName: "Dermatoloji", symptoms: ["SMP-012-1", "SMP-013-1"], prevalence: 0.30, seasons: "Hepsi", targetAges: ["AGE-2", "AGE-3"] },
-    { id: "HST-002", name: "Kefaljin", typeName: "Nörolojik", symptoms: ["SMP-011-1"], prevalence: 0.85, seasons: "Hepsi", targetAges: ["AGE-2", "AGE-3"] },
-    { id: "HST-003", name: "Stomatitiz", typeName: "Ağız Sağlığı", symptoms: ["SMP-016-1"], prevalence: 0.25, seasons: "Hepsi", targetAges: ["AGE-2", "AGE-3"] },
-    { id: "HST-004", name: "İnsektis Dermatit", typeName: "Dermatoloji", symptoms: ["SMP-012-1"], prevalence: 0.50, seasons: "Yaz, İlkbahar", targetAges: ["AGE-1", "AGE-2", "AGE-3"] },
-    { id: "HST-005", name: "Epidermitis", typeName: "Dermatoloji", symptoms: ["SMP-012-1", "SMP-013-1"], prevalence: 0.75, seasons: "Hepsi", targetAges: ["AGE-1"] },
-    { id: "HST-006", name: "Thermoreksis", typeName: "Solunum & KBB", symptoms: ["SMP-003-1", "SMP-004-1"], prevalence: 0.20, seasons: "Yaz", targetAges: ["AGE-3"] },
-    { id: "HST-007", name: "Dispeptitis", typeName: "Sindirim", symptoms: ["SMP-006-1", "SMP-007-1"], prevalence: 0.70, seasons: "Hepsi", targetAges: ["AGE-1", "AGE-2", "AGE-3"] },
-    { id: "HST-008", name: "Konjonktivitis", typeName: "Göz", symptoms: ["SMP-018-1"], prevalence: 0.30, seasons: "Hepsi", targetAges: ["AGE-2", "AGE-3"] },
-    { id: "HST-009", name: "Polenozis", typeName: "Alerji", symptoms: ["SMP-001-1", "SMP-002-1", "SMP-018-1"], prevalence: 0.65, seasons: "Yaz, İlkbahar", targetAges: ["AGE-2", "AGE-3"] },
-    { id: "HST-010", name: "Rino-Faranjit", typeName: "Solunum & KBB", symptoms: ["SMP-002-1", "SMP-004-1", "SMP-005-1"], prevalence: 0.90, seasons: "Sonbahar, Kış", targetAges: ["AGE-2", "AGE-3"] },
-    { id: "HST-011", name: "Dentisyon Febri", typeName: "Ağız Sağlığı", symptoms: ["SMP-017-1", "SMP-020-1"], prevalence: 0.45, seasons: "Hepsi", targetAges: ["AGE-1", "AGE-2"] },
-    { id: "HST-012", name: "Enteroflux", typeName: "Sindirim", symptoms: ["SMP-008-1", "SMP-009-1"], prevalence: 0.40, seasons: "Hepsi", targetAges: ["AGE-2", "AGE-3"] },
-    { id: "HST-013", name: "Miyoartralji", typeName: "Ortopedik", symptoms: ["SMP-014-1", "SMP-015-1"], prevalence: 0.35, seasons: "Sonbahar, Kış", targetAges: ["AGE-3"] },
-    { id: "HST-014", name: "Laringo-Tussis", typeName: "Solunum & KBB", symptoms: ["SMP-004-1", "SMP-005-1"], prevalence: 0.60, seasons: "Kış", targetAges: ["AGE-1", "AGE-2"] },
-    { id: "HST-015", name: "Gastritiz", typeName: "Sindirim", symptoms: ["SMP-006-1", "SMP-007-1"], prevalence: 0.50, seasons: "Hepsi", targetAges: ["AGE-3"] },
-    { id: "HST-016", name: "Otaljin", typeName: "Solunum & KBB", symptoms: ["SMP-020-1", "SMP-019-1"], prevalence: 0.25, seasons: "Sonbahar, Kış", targetAges: ["AGE-1", "AGE-2"] },
-    { id: "HST-017", name: "Vertigo-Nevralji", typeName: "Nörolojik", symptoms: ["SMP-010-1", "SMP-011-1"], prevalence: 0.10, seasons: "Hepsi", targetAges: ["AGE-3"] },
-    { id: "HST-018", name: "Fotofobik Rinit", typeName: "Alerji", symptoms: ["SMP-001-1", "SMP-018-1"], prevalence: 0.25, seasons: "İlkbahar, Yaz", targetAges: ["AGE-2", "AGE-3"] },
-    { id: "HST-019", name: "Astenik Febri", typeName: "Sistemik", symptoms: ["SMP-019-1", "SMP-020-2"], prevalence: 0.40, seasons: "Sonbahar, Kış", targetAges: ["AGE-1", "AGE-2", "AGE-3"] },
-    { id: "HST-020", name: "Odontos-Spazm", typeName: "Ağız Sağlığı", symptoms: ["SMP-017-2"], prevalence: 0.45, seasons: "Hepsi", targetAges: ["AGE-2", "AGE-3"] },
-    { id: "HST-021", name: "Rinokomozis", typeName: "Solunum & KBB", symptoms: ["SMP-002-1", "SMP-003-1"], prevalence: 0.70, seasons: "Sonbahar, Kış", targetAges: ["AGE-2", "AGE-3"] },
-    { id: "HST-022", name: "Miyo-Kefaljin", typeName: "Nörolojik", symptoms: ["SMP-011-1", "SMP-015-1"], prevalence: 0.30, seasons: "Hepsi", targetAges: ["AGE-3"] },
-    { id: "HST-023", name: "Entero-Gastrit", typeName: "Sindirim", symptoms: ["SMP-007-1", "SMP-008-1", "SMP-009-1"], prevalence: 0.40, seasons: "Yaz, Sonbahar", targetAges: ["AGE-2", "AGE-3"] },
-    { id: "HST-024", name: "Dermato-Pruritus", typeName: "Dermatoloji", symptoms: ["SMP-012-1"], prevalence: 0.50, seasons: "Hepsi", targetAges: ["AGE-1", "AGE-2", "AGE-3"] },
-    { id: "HST-025", name: "Faringo-Tussis", typeName: "Solunum & KBB", symptoms: ["SMP-004-1", "SMP-005-1", "SMP-020-1"], prevalence: 0.65, seasons: "Kış", targetAges: ["AGE-2", "AGE-3"] },
-    { id: "HST-026", name: "Astenik Dispepsi", typeName: "Sindirim", symptoms: ["SMP-006-1", "SMP-019-1"], prevalence: 0.20, seasons: "Hepsi", targetAges: ["AGE-3"] },
-    { id: "HST-027", name: "Otitis-Febri", typeName: "Solunum & KBB", symptoms: ["SMP-020-2"], prevalence: 0.15, seasons: "Sonbahar, Kış", targetAges: ["AGE-1", "AGE-2"] },
-    { id: "HST-028", name: "Allergo-Rinit", typeName: "Alerji", symptoms: ["SMP-001-1", "SMP-003-1"], prevalence: 0.60, seasons: "İlkbahar, Yaz", targetAges: ["AGE-2", "AGE-3"] },
-    { id: "HST-029", name: "Odonto-Gingivit", typeName: "Ağız Sağlığı", symptoms: ["SMP-016-1", "SMP-017-1"], prevalence: 0.30, seasons: "Hepsi", targetAges: ["AGE-2", "AGE-3"] },
-    { id: "HST-030", name: "Miyo-Sistemik Febri", typeName: "Sistemik", symptoms: ["SMP-015-1", "SMP-019-1", "SMP-020-1"], prevalence: 0.35, seasons: "Kış", targetAges: ["AGE-2", "AGE-3"] },
-    { id: "HST-031", name: "Dermato-Eritem", typeName: "Dermatoloji", symptoms: ["SMP-013-1"], prevalence: 0.20, seasons: "Yaz", targetAges: ["AGE-1", "AGE-2"] },
-    { id: "HST-032", name: "Vertigo-Komozis", typeName: "Nörolojik", symptoms: ["SMP-010-1", "SMP-019-1"], prevalence: 0.10, seasons: "Hepsi", targetAges: ["AGE-3"] },
-    { id: "HST-033", name: "Laringo-Stomatit", typeName: "Ağız Sağlığı", symptoms: ["SMP-004-1", "SMP-016-1"], prevalence: 0.25, seasons: "Hepsi", targetAges: ["AGE-2", "AGE-3"] },
-    { id: "HST-034", name: "Entero-Dyspepsia", typeName: "Sindirim", symptoms: ["SMP-006-1", "SMP-009-1"], prevalence: 0.35, seasons: "Hepsi", targetAges: ["AGE-2", "AGE-3"] },
-    { id: "HST-035", name: "Oculo-Rinit", typeName: "Alerji", symptoms: ["SMP-002-1", "SMP-018-1"], prevalence: 0.40, seasons: "İlkbahar", targetAges: ["AGE-2", "AGE-3"] }
+    { id: "HST-001", name: "Rino-Alergozis", typeName: "Alerji", symptoms: ["SMP-001-1", "SMP-002-1", "SMP-018-1"], prevalence: 0.60, seasons: "İlkbahar, Yaz", targetAges: ["AGE-2", "AGE-3"] },
+    { id: "HST-002", name: "Laringo-Tussis", typeName: "Solunum & KBB", symptoms: ["SMP-003-1", "SMP-004-1", "SMP-005-1"], prevalence: 0.70, seasons: "Sonbahar, Kış", targetAges: ["AGE-1", "AGE-2", "AGE-3"] },
+    { id: "HST-003", name: "Entero-Dyspepsia", typeName: "Sindirim", symptoms: ["SMP-006-1", "SMP-007-1"], prevalence: 0.50, seasons: "Hepsi", targetAges: ["AGE-1", "AGE-2", "AGE-3"] },
+    { id: "HST-004", name: "Gastro-Fluxis", typeName: "Sindirim", symptoms: ["SMP-008-1", "SMP-009-1"], prevalence: 0.45, seasons: "Hepsi", targetAges: ["AGE-2", "AGE-3"] },
+    { id: "HST-005", name: "Vertigo-Kefaljin", typeName: "Nörolojik", symptoms: ["SMP-010-1", "SMP-011-1"], prevalence: 0.30, seasons: "Hepsi", targetAges: ["AGE-3"] },
+    { id: "HST-006", name: "Dermaklinis", typeName: "Dermatoloji", symptoms: ["SMP-012-1", "SMP-013-1"], prevalence: 0.40, seasons: "Yaz, İlkbahar", targetAges: ["AGE-1", "AGE-2"] },
+    { id: "HST-007", name: "Miyoartralji", typeName: "Ortopedik", symptoms: ["SMP-014-1", "SMP-015-1"], prevalence: 0.35, seasons: "Sonbahar, Kış", targetAges: ["AGE-2", "AGE-3"] },
+    { id: "HST-008", name: "Odonto-Stomatit", typeName: "Ağız Sağlığı", symptoms: ["SMP-016-1", "SMP-017-1"], prevalence: 0.30, seasons: "Hepsi", targetAges: ["AGE-1", "AGE-2", "AGE-3"] },
+    { id: "HST-009", name: "Astenik-Febri", typeName: "Sistemik", symptoms: ["SMP-020-1"], prevalence: 0.50, seasons: "Sonbahar, Kış", targetAges: ["AGE-1", "AGE-2", "AGE-3"] },
+    { id: "HST-010", name: "Thermoreksis", typeName: "Solunum & KBB", symptoms: ["SMP-003-1", "SMP-005-1", "SMP-020-2"], prevalence: 0.25, seasons: "Yaz", targetAges: ["AGE-1", "AGE-3"] }
 ];
 
-// === 4. İLAÇLAR (medicines) ===
+// === 4. İLAÇLAR (medicines) - Başlangıç stokları 2 adet ===
 const medicines = [
-    { id: "ILG-017", name: "Orajel Macun", level: 1, group: "Ağız & Diş Sağlığı", desc: "Diş ağrısı ve ağız içi yaralara antiseptik.", symptoms: ["SMP-016", "SMP-017"], treatedSeverity: 1, compatibility: ["AGE-2", "AGE-3"], forbiddenConditions: [], buyPrice: 10, price: 17, count: 1, shelfLife: 20 },
-    { id: "ILG-018", name: "Dentababy Jel", level: 1, group: "Ağız & Diş Sağlığı", desc: "Bebeklerin diş çıkarma ağrılarını azaltan jel.", symptoms: ["SMP-016", "SMP-017"], treatedSeverity: 1, compatibility: ["AGE-1", "AGE-2"], forbiddenConditions: [], buyPrice: 12, price: 20, count: 1, shelfLife: 15 },
-    { id: "ILG-026", name: "Pedident Ağız Jeli", level: 1, group: "Ağız & Diş Sağlığı", desc: "Bebeklerde ağız içi yara ve hassasiyet jeli.", symptoms: ["SMP-016", "SMP-017"], treatedSeverity: 1, compatibility: ["AGE-1"], forbiddenConditions: [], buyPrice: 9, price: 16, count: 1, shelfLife: 18 },
-    { id: "ILG-036", name: "Ora-Senior Solüsyon", level: 1, group: "Ağız & Diş Sağlığı", desc: "Protez ve yaşlı ağız içi yaraları için sprey.", symptoms: ["SMP-016", "SMP-017"], treatedSeverity: 2, compatibility: ["AGE-3"], forbiddenConditions: [], buyPrice: 14, price: 22, count: 1, shelfLife: 24 },
-    { id: "ILG-037", name: "Dent-Forte Jel", level: 1, group: "Ağız & Diş Sağlığı", desc: "Yetişkinlerde şiddetli diş eti ağrısı jeli.", symptoms: ["SMP-016"], treatedSeverity: 2, compatibility: ["AGE-2", "AGE-3"], forbiddenConditions: [], buyPrice: 13, price: 21, count: 1, shelfLife: 20 },
-    { id: "ILG-001", name: "Parasedol Tablet", level: 1, group: "Sistemik & Genel", desc: "Hafif etkili genel ağrı kesici ve ateş düşürücü.", symptoms: ["SMP-011", "SMP-015"], treatedSeverity: 1, compatibility: ["AGE-2", "AGE-3"], forbiddenConditions: ["ODR-003"], buyPrice: 10, price: 15, count: 1, shelfLife: 20 },
-    { id: "ILG-002", name: "Algofiks Kapsül", level: 1, group: "Sistemik & Genel", desc: "Şiddetli baş ağrısı ve kas spazmları için kapsül.", symptoms: ["SMP-011", "SMP-015"], treatedSeverity: 2, compatibility: ["AGE-2", "AGE-3"], forbiddenConditions: [], buyPrice: 14, price: 22, count: 1, shelfLife: 18 },
-    { id: "ILG-003", name: "Pedisip Şurup", level: 1, group: "Sistemik & Genel", desc: "Bebek ve çocuklar için hafif ağrı kesici.", symptoms: ["SMP-011", "SMP-020"], treatedSeverity: 1, compatibility: ["AGE-1", "AGE-2"], forbiddenConditions: [], buyPrice: 12, price: 18, count: 1, shelfLife: 12 },
-    { id: "ILG-004", name: "Febri-Drop Damla", level: 1, group: "Sistemik & Genel", desc: "Bebeklerde yüksek ateş ve huzursuzluk için damla.", symptoms: ["SMP-020"], treatedSeverity: 2, compatibility: ["AGE-1"], forbiddenConditions: [], buyPrice: 15, price: 24, count: 1, shelfLife: 10 },
-    { id: "ILG-028", name: "Arthri-Ease Fort", level: 1, group: "Sistemik & Genel", desc: "Yaşlılarda kronik eklem ve baş ağrısı için tablet.", symptoms: ["SMP-011", "SMP-015"], treatedSeverity: 2, compatibility: ["AGE-3"], forbiddenConditions: ["ODR-002"], buyPrice: 16, price: 25, count: 1, shelfLife: 24 },
-    { id: "ILG-029", name: "Kid-Analgesic Şurup", level: 1, group: "Sistemik & Genel", desc: "Çocuklar için hızlı etki eden ateş düşürücü.", symptoms: ["SMP-020"], treatedSeverity: 1, compatibility: ["AGE-1"], forbiddenConditions: [], buyPrice: 11, price: 17, count: 1, shelfLife: 15 },
-    { id: "ILG-011", name: "Allerfree Tablet", level: 1, group: "Alerji", desc: "Hapşırma ve göz sulanmasını engelleyen tablet.", symptoms: ["SMP-001", "SMP-018"], treatedSeverity: 1, compatibility: ["AGE-2", "AGE-3"], forbiddenConditions: [], buyPrice: 11, price: 18, count: 1, shelfLife: 20 },
-    { id: "ILG-012", name: "Histadrop Şurup", level: 1, group: "Alerji", desc: "Alerjik burun akıntısı ve hapşırmayı kesen şurup.", symptoms: ["SMP-001", "SMP-002"], treatedSeverity: 1, compatibility: ["AGE-1", "AGE-2"], forbiddenConditions: [], buyPrice: 13, price: 22, count: 1, shelfLife: 15 },
-    { id: "ILG-024", name: "Alergo-Max Tablet", level: 1, group: "Alerji", desc: "Yoğun alerjik burun akıntısını kesen tablet.", symptoms: ["SMP-001", "SMP-002"], treatedSeverity: 2, compatibility: ["AGE-2", "AGE-3"], forbiddenConditions: [], buyPrice: 12, price: 20, count: 1, shelfLife: 24 },
-    { id: "ILG-034", name: "Aller-Baby Damla", level: 1, group: "Alerji", desc: "Bebeklerde mevsimsel alerji ve kaşıntı damlası.", symptoms: ["SMP-001"], treatedSeverity: 1, compatibility: ["AGE-1"], forbiddenConditions: [], buyPrice: 10, price: 16, count: 1, shelfLife: 12 },
-    { id: "ILG-035", name: "Pedia-Histin Şurup", level: 1, group: "Alerji", desc: "Çocuklar için antihistaminik şurup.", symptoms: ["SMP-001", "SMP-018"], treatedSeverity: 1, compatibility: ["AGE-1", "AGE-2"], forbiddenConditions: [], buyPrice: 12, price: 19, count: 1, shelfLife: 18 },
-    { id: "ILG-009", name: "Dermaplus Krem", level: 1, group: "Cilt & Dermatoloji", desc: "Ciltte kızarıklık ve kaşıntıyı yatıştıran krem.", symptoms: ["SMP-012", "SMP-013"], treatedSeverity: 1, compatibility: ["AGE-2", "AGE-3"], forbiddenConditions: [], buyPrice: 12, price: 20, count: 1, shelfLife: 30 },
-    { id: "ILG-010", name: "BabyCare Merhem", level: 1, group: "Cilt & Dermatoloji", desc: "Bebek pişiklerinde bariyer oluşturan merhem.", symptoms: ["SMP-012", "SMP-013"], treatedSeverity: 1, compatibility: ["AGE-1", "AGE-2"], forbiddenConditions: [], buyPrice: 10, price: 17, count: 1, shelfLife: 25 },
-    { id: "ILG-031", name: "Cutis-Rest Jel", level: 1, group: "Cilt & Dermatoloji", desc: "Hassas bebek ve çocuk cildi için yatıştırıcı.", symptoms: ["SMP-012"], treatedSeverity: 1, compatibility: ["AGE-1"], forbiddenConditions: [], buyPrice: 9, price: 15, count: 1, shelfLife: 20 },
-    { id: "ILG-032", name: "Derma-Derm Krem", level: 1, group: "Cilt & Dermatoloji", desc: "Yetişkinlerde egzama ve yoğun kaşıntı kremi.", symptoms: ["SMP-013"], treatedSeverity: 2, compatibility: ["AGE-2", "AGE-3"], forbiddenConditions: [], buyPrice: 15, price: 24, count: 1, shelfLife: 30 },
-    { id: "ILG-033", name: "Senio-Derm Merhem", level: 1, group: "Cilt & Dermatoloji", desc: "Yaşlılarda kuru cilt dokusu ve döküntü merhemi.", symptoms: ["SMP-012", "SMP-013"], treatedSeverity: 1, compatibility: ["AGE-3"], forbiddenConditions: [], buyPrice: 13, price: 21, count: 1, shelfLife: 25 },
-    { id: "ILG-019", name: "Optiallerg Damla", level: 1, group: "Göz", desc: "Göz sulanması ve kaşıntısını gideren damla.", symptoms: ["SMP-018"], treatedSeverity: 1, compatibility: ["AGE-2", "AGE-3"], forbiddenConditions: [], buyPrice: 12, price: 20, count: 1, shelfLife: 12 },
-    { id: "ILG-038", name: "Pedia-Optic Damla", level: 1, group: "Göz", desc: "Bebek ve çocuklarda çapaklanma ve sulanma.", symptoms: ["SMP-018"], treatedSeverity: 1, compatibility: ["AGE-1", "AGE-2"], forbiddenConditions: [], buyPrice: 11, price: 17, count: 1, shelfLife: 10 },
-    { id: "ILG-039", name: "Visio-Clean Damla", level: 1, group: "Göz", desc: "Bebeklerde hassas göz temizleme damlası.", symptoms: ["SMP-018"], treatedSeverity: 1, compatibility: ["AGE-1"], forbiddenConditions: [], buyPrice: 10, price: 15, count: 1, shelfLife: 12 },
-    { id: "ILG-040", name: "Opti-Dry Relief", level: 1, group: "Göz", desc: "Yetişkin ve yaşlılarda göz kuruluğu damlası.", symptoms: ["SMP-018"], treatedSeverity: 1, compatibility: ["AGE-2", "AGE-3"], forbiddenConditions: [], buyPrice: 14, price: 22, count: 1, shelfLife: 18 },
-    { id: "ILG-041", name: "Senio-Optic Drop", level: 1, group: "Göz", desc: "Yaşlılarda göz tansiyonu/kızarıklık destek.", symptoms: ["SMP-018"], treatedSeverity: 2, compatibility: ["AGE-3"], forbiddenConditions: [], buyPrice: 17, price: 27, count: 1, shelfLife: 15 },
-    { id: "ILG-020", name: "Verti-Null Tablet", level: 1, group: "Nörolojik & Sinir", desc: "Baş dönmesi ve halsizlik kesen spesifik tablet.", symptoms: ["SMP-010", "SMP-019"], treatedSeverity: 1, compatibility: ["AGE-2", "AGE-3"], forbiddenConditions: [], buyPrice: 16, price: 26, count: 1, shelfLife: 20 },
-    { id: "ILG-021", name: "Tonik-Plus Fort", level: 1, group: "Nörolojik & Sinir", desc: "Ağır halsizlik ve baş dönmesi için şase/tablet.", symptoms: ["SMP-010", "SMP-019"], treatedSeverity: 2, compatibility: ["AGE-2", "AGE-3"], forbiddenConditions: [], buyPrice: 18, price: 30, count: 1, shelfLife: 15 },
-    { id: "ILG-027", name: "Verti-Baby Damla", level: 1, group: "Nörolojik & Sinir", desc: "Bebeklerde halsizlik ve baş dönmesi damlası.", symptoms: ["SMP-010", "SMP-019"], treatedSeverity: 1, compatibility: ["AGE-1"], forbiddenConditions: [], buyPrice: 14, price: 22, count: 1, shelfLife: 15 },
-    { id: "ILG-042", name: "Pedia-Vigor Şurup", level: 1, group: "Nörolojik & Sinir", desc: "Çocuklarda aşırı halsizlik ve bitkinlik şurubu.", symptoms: ["SMP-010"], treatedSeverity: 1, compatibility: ["AGE-1", "AGE-2"], forbiddenConditions: [], buyPrice: 13, price: 20, count: 1, shelfLife: 18 },
-    { id: "ILG-043", name: "Senio-Verti Tablet", level: 1, group: "Nörolojik & Sinir", desc: "Yaşlılarda kronik denge bozukluğu tableti.", symptoms: ["SMP-019"], treatedSeverity: 2, compatibility: ["AGE-3"], forbiddenConditions: ["ODR-001"], buyPrice: 19, price: 29, count: 1, shelfLife: 24 },
-    { id: "ILG-022", name: "Arthros-Jel", level: 1, group: "Kas & İskelet", desc: "Eklem ve kas ağrıları için ferahlatıcı jel.", symptoms: ["SMP-014", "SMP-015"], treatedSeverity: 1, compatibility: ["AGE-2", "AGE-3"], forbiddenConditions: [], buyPrice: 11, price: 18, count: 1, shelfLife: 30 },
-    { id: "ILG-044", name: "Pedia-Flex Jel", level: 1, group: "Kas & İskelet", desc: "Çocuklarda büyüme ve burkulma ağrısı jeli.", symptoms: ["SMP-014"], treatedSeverity: 1, compatibility: ["AGE-1", "AGE-2"], forbiddenConditions: [], buyPrice: 10, price: 16, count: 1, shelfLife: 20 },
-    { id: "ILG-045", name: "Baby-Motion Krem", level: 1, group: "Kas & İskelet", desc: "Bebeklerde kas sertliği ve rahatlatıcı krem.", symptoms: ["SMP-014"], treatedSeverity: 1, compatibility: ["AGE-1"], forbiddenConditions: [], buyPrice: 12, price: 19, count: 1, shelfLife: 18 },
-    { id: "ILG-046", name: "Osteo-Flex Merhem", level: 1, group: "Kas & İskelet", desc: "Yaşlılarda kronik romatizma ve eklem kremi.", symptoms: ["SMP-014", "SMP-015"], treatedSeverity: 2, compatibility: ["AGE-3"], forbiddenConditions: [], buyPrice: 16, price: 26, count: 1, shelfLife: 25 },
-    { id: "ILG-047", name: "Musculo-Max Jel", level: 1, group: "Kas & İskelet", desc: "Yetişkinlerde ağır kas zorlanması jeli.", symptoms: ["SMP-015"], treatedSeverity: 2, compatibility: ["AGE-2"], forbiddenConditions: [], buyPrice: 14, price: 23, count: 1, shelfLife: 30 },
-    { id: "ILG-005", name: "Mentolin Sprey", level: 1, group: "Solunum & KBB", desc: "Boğaz tahrişi ve burun tıkanıklığını ferahlatan sprey.", symptoms: ["SMP-003", "SMP-004"], treatedSeverity: 1, compatibility: ["AGE-2", "AGE-3"], forbiddenConditions: [], buyPrice: 9, price: 15, count: 1, shelfLife: 25 },
-    { id: "ILG-006", name: "NasoClear Damla", level: 1, group: "Solunum & KBB", desc: "Bebek ve çocuklarda tıkalı burun kanalları için.", symptoms: ["SMP-002", "SMP-003"], treatedSeverity: 1, compatibility: ["AGE-1", "AGE-2"], forbiddenConditions: [], buyPrice: 8, price: 14, count: 1, shelfLife: 15 },
-    { id: "ILG-007", name: "Tussisin Şurup", level: 1, group: "Solunum & KBB", desc: "Öksürük ve boğaz ağrısını yumuşatan şurup.", symptoms: ["SMP-004", "SMP-005"], treatedSeverity: 1, compatibility: ["AGE-2", "AGE-3"], forbiddenConditions: [], buyPrice: 11, price: 18, count: 1, shelfLife: 15 },
-    { id: "ILG-008", name: "Bronko-Kidd Damla", level: 1, group: "Solunum & KBB", desc: "Bebeklerde hırıltılı öksürüğü gideren damla.", symptoms: ["SMP-005"], treatedSeverity: 1, compatibility: ["AGE-1"], forbiddenConditions: ["ODR-001"], buyPrice: 13, price: 21, count: 1, shelfLife: 10 },
-    { id: "ILG-023", name: "NasoFort Sprey", level: 1, group: "Solunum & KBB", desc: "Yetişkin/Yaşlılarda kronik tıkanıklık spreyi.", symptoms: ["SMP-002", "SMP-003"], treatedSeverity: 2, compatibility: ["AGE-2", "AGE-3"], forbiddenConditions: [], buyPrice: 11, price: 18, count: 1, shelfLife: 20 },
-    { id: "ILG-030", name: "Pedia-Balm Şurup", level: 1, group: "Solunum & KBB", desc: "Çocuklarda gece öksürüğünü kesen bitkisel şurup.", symptoms: ["SMP-004", "SMP-005"], treatedSeverity: 1, compatibility: ["AGE-1"], forbiddenConditions: [], buyPrice: 10, price: 16, count: 1, shelfLife: 18 },
-    { id: "ILG-013", name: "Gavislik Likit", level: 1, group: "Sindirim & Mide", desc: "Mide yanması ve mide bulantısını yatıştırır.", symptoms: ["SMP-006", "SMP-007"], treatedSeverity: 1, compatibility: ["AGE-2", "AGE-3"], forbiddenConditions: [], buyPrice: 11, price: 18, count: 1, shelfLife: 18 },
-    { id: "ILG-014", name: "Anti-Nause Tablet", level: 1, group: "Sindirim & Mide", desc: "Şiddetli mide bulantısı ve krampları önler.", symptoms: ["SMP-007", "SMP-008"], treatedSeverity: 2, compatibility: ["AGE-2", "AGE-3"], forbiddenConditions: ["ODR-002"], buyPrice: 13, price: 21, count: 1, shelfLife: 22 },
-    { id: "ILG-015", name: "BioGastro Drop", level: 1, group: "Sindirim & Mide", desc: "Bebeklerde karın ağrısı ve ishali rahatlatır.", symptoms: ["SMP-008", "SMP-009"], treatedSeverity: 1, compatibility: ["AGE-1"], forbiddenConditions: [], buyPrice: 15, price: 25, count: 1, shelfLife: 12 },
-    { id: "ILG-016", name: "Enterofiks Şurup", level: 1, group: "Sindirim & Mide", desc: "Çocuk ve yetişkinlerde ishali durdurur.", symptoms: ["SMP-009"], treatedSeverity: 2, compatibility: ["AGE-1", "AGE-2", "AGE-3"], forbiddenConditions: [], buyPrice: 14, price: 23, count: 1, shelfLife: 15 },
-    { id: "ILG-025", name: "Pedigastro Şurup", level: 1, group: "Sindirim & Mide", desc: "Bebeklerde mide rahatsızlığı ve bulantı şurubu.", symptoms: ["SMP-006", "SMP-007"], treatedSeverity: 1, compatibility: ["AGE-1"], forbiddenConditions: [], buyPrice: 10, price: 17, count: 1, shelfLife: 12 }
+    { id: "ILG-001", name: "Alergo-Combi Tablet", level: 1, group: "Alerji", desc: "HST-001'in tüm semptomlarını tek başına iyileştirir.", symptoms: ["SMP-001", "SMP-002", "SMP-018"], treatedSeverity: 1, compatibility: ["AGE-2", "AGE-3"], forbiddenConditions: [], buyPrice: 18, price: 28, count: 2, shelfLife: 20 },
+    { id: "ILG-002", name: "Histam-Stop Tablet", level: 1, group: "Alerji", desc: "Hapşırma ve burun akıntısını keser. (HST-001 Parça 1)", symptoms: ["SMP-001", "SMP-002"], treatedSeverity: 1, compatibility: ["AGE-2", "AGE-3"], forbiddenConditions: [], buyPrice: 10, price: 16, count: 2, shelfLife: 20 },
+    { id: "ILG-003", name: "Ocu-Clear Damla", level: 1, group: "Göz", desc: "Göz sulanmasını giderir. (HST-001 Parça 2)", symptoms: ["SMP-018"], treatedSeverity: 1, compatibility: ["AGE-2", "AGE-3"], forbiddenConditions: [], buyPrice: 9, price: 14, count: 2, shelfLife: 15 },
+    { id: "ILG-004", name: "Pulmo-Max Şurup", level: 1, group: "Solunum & KBB", desc: "HST-002'nin tüm semptomlarını tek başına iyileştirir.", symptoms: ["SMP-003", "SMP-004", "SMP-005"], treatedSeverity: 1, compatibility: ["AGE-1", "AGE-2", "AGE-3"], forbiddenConditions: [], buyPrice: 20, price: 30, count: 2, shelfLife: 15 },
+    { id: "ILG-005", name: "Naso-Decon Sprey", level: 1, group: "Solunum & KBB", desc: "Burun tıkanıklığı ve boğaz ağrısını çözer. (HST-002 Parça 1)", symptoms: ["SMP-003", "SMP-004"], treatedSeverity: 1, compatibility: ["AGE-1", "AGE-2", "AGE-3"], forbiddenConditions: [], buyPrice: 11, price: 17, count: 2, shelfLife: 25 },
+    { id: "ILG-006", name: "Tussis-Ex Şurup", level: 1, group: "Solunum & KBB", desc: "Sadece öksürüğü yumuşatır. (HST-002 Parça 2)", symptoms: ["SMP-005"], treatedSeverity: 1, compatibility: ["AGE-1", "AGE-2", "AGE-3"], forbiddenConditions: [], buyPrice: 8, price: 13, count: 2, shelfLife: 18 },
+    { id: "ILG-007", name: "Gastro-Total Likit", level: 1, group: "Sindirim & Mide", desc: "HST-003'ün tüm semptomlarını tek başına iyileştirir.", symptoms: ["SMP-006", "SMP-007"], treatedSeverity: 1, compatibility: ["AGE-1", "AGE-2", "AGE-3"], forbiddenConditions: [], buyPrice: 15, price: 23, count: 2, shelfLife: 20 },
+    { id: "ILG-008", name: "Mide-Anacid Süspansiyon", level: 1, group: "Sindirim & Mide", desc: "Mide yanmasını nötrler. (HST-003 Parça 1)", symptoms: ["SMP-006"], treatedSeverity: 1, compatibility: ["AGE-1", "AGE-2", "AGE-3"], forbiddenConditions: [], buyPrice: 8, price: 13, count: 2, shelfLife: 20 },
+    { id: "ILG-009", name: "Eme-Stop Damla", level: 1, group: "Sindirim & Mide", desc: "Mide bulantısını keser. (HST-003 Parça 2)", symptoms: ["SMP-007"], treatedSeverity: 1, compatibility: ["AGE-1", "AGE-2", "AGE-3"], forbiddenConditions: [], buyPrice: 8, price: 13, count: 2, shelfLife: 15 },
+    { id: "ILG-010", name: "Entero-Cure Tablet", level: 1, group: "Sindirim & Mide", desc: "HST-004'ün tüm semptomlarını tek başına iyileştirir.", symptoms: ["SMP-008", "SMP-009"], treatedSeverity: 1, compatibility: ["AGE-2", "AGE-3"], forbiddenConditions: [], buyPrice: 16, price: 25, count: 2, shelfLife: 18 },
+    { id: "ILG-011", name: "Spasmo-Ease Tablet", level: 1, group: "Sindirim & Mide", desc: "Karın ağrısı ve krampları çözer. (HST-004 Parça 1)", symptoms: ["SMP-008"], treatedSeverity: 1, compatibility: ["AGE-1"], forbiddenConditions: [], buyPrice: 9, price: 14, count: 2, shelfLife: 22 },
+    { id: "ILG-012", name: "Diarrho-Stop Şurup", level: 1, group: "Sindirim & Mide", desc: "İshali keser. (HST-004 Parça 2)", symptoms: ["SMP-009"], treatedSeverity: 1, compatibility: ["AGE-1"], forbiddenConditions: [], buyPrice: 9, price: 14, count: 2, shelfLife: 15 },
+    { id: "ILG-013", name: "Neuro-Fort Tablet", level: 1, group: "Nörolojik & Sinir", desc: "HST-005'in tüm semptomlarını tek başına iyileştirir.", symptoms: ["SMP-010", "SMP-011"], treatedSeverity: 1, compatibility: ["AGE-3"], forbiddenConditions: [], buyPrice: 17, price: 26, count: 2, shelfLife: 24 },
+    { id: "ILG-014", name: "Verti-Cure Tablet", level: 1, group: "Nörolojik & Sinir", desc: "Baş dönmesini engeller. (HST-005 Parça 1)", symptoms: ["SMP-010"], treatedSeverity: 1, compatibility: ["AGE-3"], forbiddenConditions: [], buyPrice: 9, price: 15, count: 2, shelfLife: 20 },
+    { id: "ILG-015", name: "Analgo-Kefaljin", level: 1, group: "Nörolojik & Sinir", desc: "Baş ağrısını keser. (HST-005 Parça 2)", symptoms: ["SMP-011"], treatedSeverity: 1, compatibility: ["AGE-3"], forbiddenConditions: [], buyPrice: 9, price: 15, count: 2, shelfLife: 25 },
+    { id: "ILG-016", name: "Dermo-Complete Krem", level: 1, group: "Cilt & Dermatoloji", desc: "HST-006'nın tüm semptomlarını tek başına iyileştirir.", symptoms: ["SMP-012", "SMP-013"], treatedSeverity: 1, compatibility: ["AGE-1", "AGE-2"], forbiddenConditions: [], buyPrice: 15, price: 23, count: 2, shelfLife: 30 },
+    { id: "ILG-017", name: "Pruri-Sed Krem", level: 1, group: "Cilt & Dermatoloji", desc: "Kaşıntıyı dindirir. (HST-006 Parça 1)", symptoms: ["SMP-012"], treatedSeverity: 1, compatibility: ["AGE-1", "AGE-2"], forbiddenConditions: [], buyPrice: 8, price: 13, count: 2, shelfLife: 25 },
+    { id: "ILG-018", name: "Erythro-Calm Merhem", level: 1, group: "Cilt & Dermatoloji", desc: "Cilt kızarıklığını giderir. (HST-006 Parça 2)", symptoms: ["SMP-013"], treatedSeverity: 1, compatibility: ["AGE-1", "AGE-2"], forbiddenConditions: [], buyPrice: 8, price: 13, count: 2, shelfLife: 30 },
+    { id: "ILG-019", name: "Myo-Arthro Gel", level: 1, group: "Kas & İskelet", desc: "HST-007'nin tüm semptomlarını tek başına iyileştirir.", symptoms: ["SMP-014", "SMP-015"], treatedSeverity: 1, compatibility: ["AGE-2", "AGE-3"], forbiddenConditions: [], buyPrice: 16, price: 25, count: 2, shelfLife: 30 },
+    { id: "ILG-020", name: "Arthro-Relief Jel", level: 1, group: "Kas & İskelet", desc: "Eklem ağrılarını rahatlatır. (HST-007 Parça 1)", symptoms: ["SMP-014"], treatedSeverity: 1, compatibility: ["AGE-2", "AGE-3"], forbiddenConditions: [], buyPrice: 9, price: 14, count: 2, shelfLife: 30 },
+    { id: "ILG-021", name: "Myo-Relax Krem", level: 1, group: "Kas & İskelet", desc: "Kas ağrılarını ve gevşemeyi sağlar. (HST-007 Parça 2)", symptoms: ["SMP-015"], treatedSeverity: 1, compatibility: ["AGE-2", "AGE-3"], forbiddenConditions: [], buyPrice: 9, price: 14, count: 2, shelfLife: 25 },
+    { id: "ILG-022", name: "Stoma-Dent Oral Gel", level: 1, group: "Ağız & Diş Sağlığı", desc: "HST-008'in tüm semptomlarını tek başına iyileştirir.", symptoms: ["SMP-016", "SMP-017"], treatedSeverity: 1, compatibility: ["AGE-1", "AGE-2", "AGE-3"], forbiddenConditions: [], buyPrice: 15, price: 23, count: 2, shelfLife: 20 },
+    { id: "ILG-023", name: "Afta-Cure Solüsyon", level: 1, group: "Ağız & Diş Sağlığı", desc: "Ağız içi yaraları iyileştirir. (HST-008 Parça 1)", symptoms: ["SMP-016"], treatedSeverity: 1, compatibility: ["AGE-1", "AGE-2", "AGE-3"], forbiddenConditions: [], buyPrice: 8, price: 13, count: 2, shelfLife: 18 },
+    { id: "ILG-024", name: "Odonto-Analgesic Jel", level: 1, group: "Ağız & Diş Sağlığı", desc: "Diş ağrısını uyuşturur. (HST-008 Parça 2)", symptoms: ["SMP-017"], treatedSeverity: 1, compatibility: ["AGE-1", "AGE-2", "AGE-3"], forbiddenConditions: [], buyPrice: 8, price: 13, count: 2, shelfLife: 20 },
+    { id: "ILG-025", name: "Febri-Astenik Şurup", level: 1, group: "Sistemik & Genel", desc: "HST-009'un tüm semptomlarını tek başına iyileştirir.", symptoms: ["SMP-019", "SMP-020"], treatedSeverity: 1, compatibility: ["AGE-1", "AGE-2", "AGE-3"], forbiddenConditions: [], buyPrice: 16, price: 24, count: 2, shelfLife: 15 },
+    { id: "ILG-026", name: "Astenik-Tone Tonik", level: 1, group: "Sistemik & Genel", desc: "Halsizlik ve bitkinliği giderir. (HST-009 Parça 1)", symptoms: ["SMP-019"], treatedSeverity: 1, compatibility: ["AGE-1", "AGE-2", "AGE-3"], forbiddenConditions: [], buyPrice: 8, price: 13, count: 2, shelfLife: 20 },
+    { id: "ILG-027", name: "Pyre-Drop Damla", level: 1, group: "Sistemik & Genel", desc: "Yüksek ateşi düşürür. (HST-009 Parça 2)", symptoms: ["SMP-020"], treatedSeverity: 1, compatibility: ["AGE-1", "AGE-2", "AGE-3"], forbiddenConditions: [], buyPrice: 8, price: 13, count: 2, shelfLife: 15 },
+    { id: "ILG-028", name: "Thermo-Kill Sprey", level: 1, group: "Solunum & KBB", desc: "HST-010'un tüm semptomlarını tek başına iyileştirir.", symptoms: ["SMP-003", "SMP-005", "SMP-020"], treatedSeverity: 2, compatibility: ["AGE-1", "AGE-3"], forbiddenConditions: [], buyPrice: 22, price: 34, count: 2, shelfLife: 15 },
+    { id: "ILG-029", name: "Respira-Block Sprey", level: 1, group: "Solunum & KBB", desc: "Burun tıkanıklığı ve öksürüğü keser. (HST-010 Parça 1)", symptoms: ["SMP-003", "SMP-005"], treatedSeverity: 1, compatibility: ["AGE-1", "AGE-3"], forbiddenConditions: [], buyPrice: 12, price: 19, count: 2, shelfLife: 20 },
+    { id: "ILG-030", name: "Pyre-Block Damla", level: 1, group: "Sistemik & Genel", desc: "Şiddetli ateşi düşürür. (HST-010 Parça 2)", symptoms: ["SMP-020"], treatedSeverity: 2, compatibility: ["AGE-1", "AGE-3"], forbiddenConditions: [], buyPrice: 10, price: 16, count: 2, shelfLife: 15 }
 ];
 
 // === 5. MÜŞTERİLER (customers) ===
 const customers = [
-    { id: "CST-001", name: "Xylar Gath", race: "Uzaylı", ageGroup: "Yetişkin", ageGroupId: "AGE-3", patienceLevel: 1, disease: "HST-010", symptomsList: ["SMP-002-1", "SMP-004-1"], chronicConditions: [], prescribedMed: ["ILG-005", "ILG-023"] },
-    { id: "CST-002", name: "Pyxis Skar", race: "Uzaylı", ageGroup: "Yetişkin", ageGroupId: "AGE-3", patienceLevel: 1, disease: "HST-002", symptomsList: ["SMP-011-1"], chronicConditions: [], prescribedMed: ["ILG-001"] },
-    { id: "CST-003", name: "Bleepo Krel", race: "Uzaylı", ageGroup: "Çocuk", ageGroupId: "AGE-2", patienceLevel: 1, disease: "HST-011", symptomsList: ["SMP-017-1", "SMP-020-1"], chronicConditions: [], prescribedMed: ["ILG-001", "ILG-017"] },
-    { id: "CST-004", name: "Elyndra Pax", race: "Uzaylı", ageGroup: "Bebek", ageGroupId: "AGE-1", patienceLevel: 1, disease: "HST-005", symptomsList: ["SMP-012-1", "SMP-013-1"], chronicConditions: [], prescribedMed: ["ILG-010"] },
-    { id: "CST-005", name: "Vandar Nyx", race: "Uzaylı", ageGroup: "Yetişkin", ageGroupId: "AGE-3", patienceLevel: 1, disease: "HST-003", symptomsList: ["SMP-016-1"], chronicConditions: [], prescribedMed: ["ILG-017"] },
-    { id: "CST-006", name: "T'Kalon Vex", race: "Uzaylı", ageGroup: "Çocuk", ageGroupId: "AGE-2", patienceLevel: 1, disease: "HST-004", symptomsList: ["SMP-012-1"], chronicConditions: [], prescribedMed: ["ILG-009"] },
-    { id: "CST-007", name: "Maelis Zeel", race: "Uzaylı", ageGroup: "Yetişkin", ageGroupId: "AGE-3", patienceLevel: 1, disease: "HST-008", symptomsList: ["SMP-018-1"], chronicConditions: [], prescribedMed: ["ILG-019"] },
-    { id: "CST-008", name: "Myron Phos", race: "Uzaylı", ageGroup: "Yetişkin", ageGroupId: "AGE-3", patienceLevel: 1, disease: "HST-009", symptomsList: ["SMP-001-1", "SMP-002-1"], chronicConditions: [], prescribedMed: ["ILG-024"] },
-    { id: "CST-009", name: "Glisno Khor", race: "Uzaylı", ageGroup: "Bebek", ageGroupId: "AGE-1", patienceLevel: 1, disease: "HST-007", symptomsList: ["SMP-006-1", "SMP-007-1"], chronicConditions: [], prescribedMed: ["ILG-025"] },
-    { id: "CST-010", name: "Krazen Dray", race: "Uzaylı", ageGroup: "Yetişkin", ageGroupId: "AGE-3", patienceLevel: 1, disease: "HST-006", symptomsList: ["SMP-003-1", "SMP-004-1"], chronicConditions: [], prescribedMed: ["ILG-005"] },
-    { id: "CST-011", name: "Zephyrus Krall", race: "Uzaylı", ageGroup: "Yetişkin", ageGroupId: "AGE-3", patienceLevel: 1, disease: "HST-022", symptomsList: ["SMP-011-1", "SMP-015-1"], chronicConditions: [], prescribedMed: ["ILG-002"] },
-    { id: "CST-012", name: "Krivok Zon", race: "Uzaylı", ageGroup: "Yetişkin", ageGroupId: "AGE-3", patienceLevel: 1, disease: "HST-015", symptomsList: ["SMP-006-1", "SMP-007-1"], chronicConditions: [], prescribedMed: ["ILG-013"] },
-    { id: "CST-013", name: "Zonar T'Zor", race: "Uzaylı", ageGroup: "Çocuk", ageGroupId: "AGE-2", patienceLevel: 1, disease: "HST-014", symptomsList: ["SMP-004-1", "SMP-005-1"], chronicConditions: [], prescribedMed: ["ILG-007"] },
-    { id: "CST-014", name: "Thraks Blix", race: "Uzaylı", ageGroup: "Çocuk", ageGroupId: "AGE-2", patienceLevel: 1, disease: "HST-028", symptomsList: ["SMP-001-1", "SMP-003-1"], chronicConditions: [], prescribedMed: ["ILG-011", "ILG-005"] },
-    { id: "CST-015", name: "Vokath Tyren", race: "Uzaylı", ageGroup: "Yetişkin", ageGroupId: "AGE-3", patienceLevel: 1, disease: "HST-013", symptomsList: ["SMP-014-1", "SMP-015-1"], chronicConditions: [], prescribedMed: ["ILG-022", "ILG-001"] },
-    { id: "CST-016", name: "Orux Vorr", race: "Uzaylı", ageGroup: "Yetişkin", ageGroupId: "AGE-3", patienceLevel: 1, disease: "HST-017", symptomsList: ["SMP-010-1", "SMP-011-1"], chronicConditions: [], prescribedMed: ["ILG-020", "ILG-001"] },
-    { id: "CST-017", name: "Nyxil Xon", race: "Uzaylı", ageGroup: "Yetişkin", ageGroupId: "AGE-3", patienceLevel: 1, disease: "HST-001", symptomsList: ["SMP-012-1", "SMP-013-1"], chronicConditions: [], prescribedMed: ["ILG-009"] },
-    { id: "CST-018", name: "Soolis Zann", race: "Uzaylı", ageGroup: "Bebek", ageGroupId: "AGE-1", patienceLevel: 1, disease: "HST-027", symptomsList: ["SMP-020-2"], chronicConditions: [], prescribedMed: ["ILG-004"] },
-    { id: "CST-019", name: "Zylos Glyph", race: "Uzaylı", ageGroup: "Çocuk", ageGroupId: "AGE-2", patienceLevel: 1, disease: "HST-021", symptomsList: ["SMP-002-1", "SMP-003-1"], chronicConditions: [], prescribedMed: ["ILG-023"] },
-    { id: "CST-020", name: "Huxli Vond", race: "Uzaylı", ageGroup: "Yetişkin", ageGroupId: "AGE-3", patienceLevel: 1, disease: "HST-023", symptomsList: ["SMP-007-1", "SMP-008-1"], chronicConditions: [], prescribedMed: ["ILG-014"] },
-    { id: "CST-021", name: "Avenra Torq", race: "Uzaylı", ageGroup: "Bebek", ageGroupId: "AGE-1", patienceLevel: 1, disease: "HST-024", symptomsList: ["SMP-012-1"], chronicConditions: [], prescribedMed: ["ILG-010"] },
-    { id: "CST-022", name: "Braxus Kael", race: "Uzaylı", ageGroup: "Yetişkin", ageGroupId: "AGE-3", patienceLevel: 1, disease: "HST-025", symptomsList: ["SMP-004-1", "SMP-005-1"], chronicConditions: [], prescribedMed: ["ILG-007"] },
-    { id: "CST-023", name: "Cyris Malo", race: "Uzaylı", ageGroup: "Yetişkin", ageGroupId: "AGE-3", patienceLevel: 1, disease: "HST-026", symptomsList: ["SMP-006-1", "SMP-019-1"], chronicConditions: [], prescribedMed: ["ILG-013", "ILG-021"] },
-    { id: "CST-024", name: "Draven Rix", race: "Uzaylı", ageGroup: "Çocuk", ageGroupId: "AGE-2", patienceLevel: 1, disease: "HST-029", symptomsList: ["SMP-016-1", "SMP-017-1"], chronicConditions: [], prescribedMed: ["ILG-017"] },
-    { id: "CST-025", name: "Elarion Syl", race: "Uzaylı", ageGroup: "Yetişkin", ageGroupId: "AGE-3", patienceLevel: 1, disease: "HST-030", symptomsList: ["SMP-015-1", "SMP-019-1"], chronicConditions: [], prescribedMed: ["ILG-002", "ILG-021"] },
-    { id: "CST-026", name: "Faelan Varis", race: "Uzaylı", ageGroup: "Bebek", ageGroupId: "AGE-1", patienceLevel: 1, disease: "HST-031", symptomsList: ["SMP-013-1"], chronicConditions: [], prescribedMed: ["ILG-010"] },
-    { id: "CST-027", name: "Gorath Zeth", race: "Uzaylı", ageGroup: "Yetişkin", ageGroupId: "AGE-3", patienceLevel: 1, disease: "HST-032", symptomsList: ["SMP-010-1", "SMP-019-1"], chronicConditions: [], prescribedMed: ["ILG-020"] },
-    { id: "CST-028", name: "Hesper Jax", race: "Uzaylı", ageGroup: "Çocuk", ageGroupId: "AGE-2", patienceLevel: 1, disease: "HST-033", symptomsList: ["SMP-004-1", "SMP-016-1"], chronicConditions: [], prescribedMed: ["ILG-005", "ILG-017"] },
-    { id: "CST-029", name: "Ishtar Kylar", race: "Uzaylı", ageGroup: "Yetişkin", ageGroupId: "AGE-3", patienceLevel: 1, disease: "HST-034", symptomsList: ["SMP-006-1", "SMP-009-1"], chronicConditions: [], prescribedMed: ["ILG-013", "ILG-016"] },
-    { id: "CST-030", name: "Jaddax Lum", race: "Uzaylı", ageGroup: "Çocuk", ageGroupId: "AGE-2", patienceLevel: 1, disease: "HST-035", symptomsList: ["SMP-002-1", "SMP-018-1"], chronicConditions: [], prescribedMed: ["ILG-012", "ILG-019"] },
-    { id: "CST-031", name: "Kaelen Morv", race: "Uzaylı", ageGroup: "Bebek", ageGroupId: "AGE-1", patienceLevel: 1, disease: "HST-016", symptomsList: ["SMP-020-1", "SMP-019-1"], chronicConditions: [], prescribedMed: ["ILG-004", "ILG-027"] },
-    { id: "CST-032", name: "Lorkan Nar", race: "Uzaylı", ageGroup: "Yetişkin", ageGroupId: "AGE-3", patienceLevel: 1, disease: "HST-012", symptomsList: ["SMP-008-1", "SMP-009-1"], chronicConditions: [], prescribedMed: ["ILG-014", "ILG-016"] },
-    { id: "CST-033", name: "Myrddin Orph", race: "Uzaylı", ageGroup: "Çocuk", ageGroupId: "AGE-2", patienceLevel: 1, disease: "HST-018", symptomsList: ["SMP-001-1", "SMP-018-1"], chronicConditions: [], prescribedMed: ["ILG-011", "ILG-019"] },
-    { id: "CST-034", name: "Norrix Pyre", race: "Uzaylı", ageGroup: "Bebek", ageGroupId: "AGE-1", patienceLevel: 1, disease: "HST-019", symptomsList: ["SMP-019-1", "SMP-020-2"], chronicConditions: [], prescribedMed: ["ILG-004", "ILG-027"] },
-    { id: "CST-035", name: "Oryn Quor", race: "Uzaylı", ageGroup: "Yetişkin", ageGroupId: "AGE-3", patienceLevel: 1, disease: "HST-020", symptomsList: ["SMP-017-2"], chronicConditions: [], prescribedMed: ["ILG-017"] },
-    { id: "CST-036", name: "Phantox Ryn", race: "Uzaylı", ageGroup: "Çocuk", ageGroupId: "AGE-2", patienceLevel: 1, disease: "HST-010", symptomsList: ["SMP-002-1", "SMP-004-1"], chronicConditions: [], prescribedMed: ["ILG-007", "ILG-005"] },
-    { id: "CST-037", name: "Qurox Styr", race: "Uzaylı", ageGroup: "Yetişkin", ageGroupId: "AGE-3", patienceLevel: 1, disease: "HST-002", symptomsList: ["SMP-011-1"], chronicConditions: [], prescribedMed: ["ILG-002"] },
-    { id: "CST-038", name: "Raelen Thark", race: "Uzaylı", ageGroup: "Yetişkin", ageGroupId: "AGE-3", patienceLevel: 1, disease: "HST-007", symptomsList: ["SMP-006-1", "SMP-007-1"], chronicConditions: [], prescribedMed: ["ILG-013"] },
-    { id: "CST-039", name: "Sylvan Urza", race: "Uzaylı", ageGroup: "Bebek", ageGroupId: "AGE-1", patienceLevel: 1, disease: "HST-011", symptomsList: ["SMP-017-1", "SMP-020-1"], chronicConditions: [], prescribedMed: ["ILG-004", "ILG-026"] },
-    { id: "CST-040", name: "Taron Valis", race: "Uzaylı", ageGroup: "Yetişkin", ageGroupId: "AGE-3", patienceLevel: 1, disease: "HST-015", symptomsList: ["SMP-006-1", "SMP-007-1"], chronicConditions: [], prescribedMed: ["ILG-013"] }
+    { id: "CST-001", name: "Xylar Gath", race: "Uzaylı", ageGroup: "Yetişkin", ageGroupId: "AGE-3", patienceLevel: 1, disease: "HST-001", symptomsList: ["SMP-001-1", "SMP-002-1", "SMP-018-1"], chronicConditions: [], prescribedMed: ["ILG-001"] },
+    { id: "CST-002", name: "Pyxis Skar", race: "Uzaylı", ageGroup: "Yetişkin", ageGroupId: "AGE-3", patienceLevel: 1, disease: "HST-002", symptomsList: ["SMP-003-1", "SMP-004-1", "SMP-005-1"], chronicConditions: [], prescribedMed: ["ILG-005", "ILG-006"] },
+    { id: "CST-003", name: "Bleepo Krel", race: "Uzaylı", ageGroup: "Çocuk", ageGroupId: "AGE-2", patienceLevel: 1, disease: "HST-003", symptomsList: ["SMP-006-1", "SMP-007-1"], chronicConditions: [], prescribedMed: ["ILG-007"] },
+    { id: "CST-004", name: "Elyndra Pax", race: "Uzaylı", ageGroup: "Bebek", ageGroupId: "AGE-1", patienceLevel: 1, disease: "HST-004", symptomsList: ["SMP-008-1", "SMP-009-1"], chronicConditions: [], prescribedMed: ["ILG-011", "ILG-012"] },
+    { id: "CST-005", name: "Vandar Nyx", race: "Uzaylı", ageGroup: "Yetişkin", ageGroupId: "AGE-3", patienceLevel: 1, disease: "HST-005", symptomsList: ["SMP-010-1", "SMP-011-1"], chronicConditions: [], prescribedMed: ["ILG-013"] },
+    { id: "CST-006", name: "T'Kalon Vex", race: "Uzaylı", ageGroup: "Çocuk", ageGroupId: "AGE-2", patienceLevel: 1, disease: "HST-006", symptomsList: ["SMP-012-1", "SMP-013-1"], chronicConditions: [], prescribedMed: ["ILG-017", "ILG-018"] },
+    { id: "CST-007", name: "Maelis Zeel", race: "Uzaylı", ageGroup: "Yetişkin", ageGroupId: "AGE-3", patienceLevel: 1, disease: "HST-007", symptomsList: ["SMP-014-1", "SMP-015-1"], chronicConditions: [], prescribedMed: ["ILG-019"] },
+    { id: "CST-008", name: "Myron Phos", race: "Uzaylı", ageGroup: "Yetişkin", ageGroupId: "AGE-3", patienceLevel: 1, disease: "HST-008", symptomsList: ["SMP-016-1", "SMP-017-1"], chronicConditions: [], prescribedMed: ["ILG-023", "ILG-024"] },
+    { id: "CST-009", name: "Glisno Khor", race: "Uzaylı", ageGroup: "Bebek", ageGroupId: "AGE-1", patienceLevel: 1, disease: "HST-009", symptomsList: ["SMP-019-1", "SMP-020-1"], chronicConditions: [], prescribedMed: ["ILG-025"] },
+    { id: "CST-010", name: "Krazen Dray", race: "Uzaylı", ageGroup: "Bebek", ageGroupId: "AGE-1", patienceLevel: 1, disease: "HST-010", symptomsList: ["SMP-003-1", "SMP-005-1", "SMP-020-2"], chronicConditions: [], prescribedMed: ["ILG-029", "ILG-030"] },
+    { id: "CST-011", name: "Zephyrus Krall", race: "Uzaylı", ageGroup: "Çocuk", ageGroupId: "AGE-2", patienceLevel: 1, disease: "HST-001", symptomsList: ["SMP-001-1", "SMP-002-1", "SMP-018-1"], chronicConditions: [], prescribedMed: ["ILG-002", "ILG-003"] },
+    { id: "CST-012", name: "Krivok Zon", race: "Uzaylı", ageGroup: "Bebek", ageGroupId: "AGE-1", patienceLevel: 1, disease: "HST-002", symptomsList: ["SMP-003-1", "SMP-004-1", "SMP-005-1"], chronicConditions: [], prescribedMed: ["ILG-004"] },
+    { id: "CST-013", name: "Zonar T'Zor", race: "Uzaylı", ageGroup: "Çocuk", ageGroupId: "AGE-2", patienceLevel: 1, disease: "HST-003", symptomsList: ["SMP-006-1", "SMP-007-1"], chronicConditions: [], prescribedMed: ["ILG-008", "ILG-009"] },
+    { id: "CST-014", name: "Thraks Blix", race: "Uzaylı", ageGroup: "Yetişkin", ageGroupId: "AGE-3", patienceLevel: 1, disease: "HST-004", symptomsList: ["SMP-008-1", "SMP-009-1"], chronicConditions: [], prescribedMed: ["ILG-010"] },
+    { id: "CST-015", name: "Vokath Tyren", race: "Uzaylı", ageGroup: "Yetişkin", ageGroupId: "AGE-3", patienceLevel: 1, disease: "HST-005", symptomsList: ["SMP-010-1", "SMP-011-1"], chronicConditions: [], prescribedMed: ["ILG-014", "ILG-015"] },
+    { id: "CST-016", name: "Orux Vorr", race: "Uzaylı", ageGroup: "Bebek", ageGroupId: "AGE-1", patienceLevel: 1, disease: "HST-006", symptomsList: ["SMP-012-1", "SMP-013-1"], chronicConditions: [], prescribedMed: ["ILG-016"] },
+    { id: "CST-017", name: "Nyxil Xon", race: "Uzaylı", ageGroup: "Çocuk", ageGroupId: "AGE-2", patienceLevel: 1, disease: "HST-007", symptomsList: ["SMP-014-1", "SMP-015-1"], chronicConditions: [], prescribedMed: ["ILG-020", "ILG-021"] },
+    { id: "CST-018", name: "Soolis Zann", race: "Uzaylı", ageGroup: "Bebek", ageGroupId: "AGE-1", patienceLevel: 1, disease: "HST-008", symptomsList: ["SMP-016-1", "SMP-017-1"], chronicConditions: [], prescribedMed: ["ILG-022"] },
+    { id: "CST-019", name: "Zylos Glyph", race: "Uzaylı", ageGroup: "Çocuk", ageGroupId: "AGE-2", patienceLevel: 1, disease: "HST-009", symptomsList: ["SMP-020-1"], chronicConditions: [], prescribedMed: ["ILG-026", "ILG-027"] },
+    { id: "CST-020", name: "Huxli Vond", race: "Uzaylı", ageGroup: "Yetişkin", ageGroupId: "AGE-3", patienceLevel: 1, disease: "HST-010", symptomsList: ["SMP-003-1", "SMP-005-1", "SMP-020-2"], chronicConditions: [], prescribedMed: ["ILG-028"] }
+];
+
+// YENİ EKLENEN: Geliştirme Listesi Veri Yapısı
+const upgradesList = [
+    {
+        id: "UPG-1",
+        title: "1. Stok Kapasitesi Artışı (Maks Stok: 3)",
+        desc: "İlaçların en yüksek stok miktarı 3 adede çıkartılır.",
+        reqEp: 50,
+        price: 500,
+        purchased: false,
+        action: function() {
+            MAX_MEDICINE_STOCK = 3;
+        }
+    },
+    {
+        id: "UPG-2",
+        title: "2. Stok Kapasitesi Artışı (Maks Stok: 4)",
+        desc: "İlaçların en yüksek stok miktarı 4 adede çıkartılır.",
+        reqEp: 200,
+        price: 1075,
+        purchased: false,
+        action: function() {
+            MAX_MEDICINE_STOCK = 4;
+        }
+    },
+    {
+        id: "UPG-3",
+        title: "Otomatik Günlük Stok Yenileme",
+        desc: "Eczane stokları her günün sonunda otomatik olarak maksimum kapasiteye yenilenir.",
+        reqEp: 500,
+        price: 2000,
+        purchased: false,
+        action: function() {
+            GameState.autoRestockEnabled = true;
+        }
+    }
 ];
 
 // === 2. DİNAMİK SÖZLÜKLER VE HARİTALAR ===
@@ -238,7 +218,6 @@ const GameData = {
         return ageGroupsMap[ageGroupId] || ageGroupId;
     },
 
-    // Semptom ID'sinden kök ID çıkarma mantığını tek yere topladık (örn: "SMP-017-1" -> "SMP-017")
     extractSymptomRoot: function(symptomId) {
         if (!symptomId) return "";
         return symptomId.split('-').slice(0, 2).join('-');
@@ -247,13 +226,14 @@ const GameData = {
 
 // === MERKEZİ DURUM DEPOSU (STATE STORE) ===
 const GameState = {
-    money: 100,
+    money: 1000,
     xp: 0,
     ep: 0,
+    satisfaction: 30, // 30 Puan ile başlar
     currentDayNumber: 1,
     dayServedCount: 0,
     dailyLimit: 5,
-    timeRemaining: 10,
+    timeRemaining: 5, // Varsayılan bekleme süresi 5 saniyeye düşürüldü
     maxCustomerPatience: 30,
     nightDuration: 120,
     status: 'EMPTY_WAIT', // 'EMPTY_WAIT', 'CUSTOMER_ACTIVE', 'NIGHT_ACTIVE', 'GAME_OVER'
@@ -275,8 +255,17 @@ const GameState = {
     dailyCaptchaTriggers: [],
     selectedCaptchaWord: null,
     captchaMatchedPairs: 0,
+    chosenDutyDay: null,      // Seçilen nöbet günü (1, 2 veya 3)
+    isDutyNightActive: false, // Gece nöbetinin aktif olup olmadığı
+    dutyNextDayPenalty: false, // Gece nöbeti sonrası ertesi günün 5 müşteriyle kısıtlanması
+    autoRestockEnabled: false, // 3. Geliştirme satın alındığında true olur
 
-    // Saf Mutasyon Fonksiyonları (Sadece veriyi değiştirir, UI'a dokunmaz)
+    modifySatisfaction: function(amount) {
+        this.satisfaction = Math.max(0, Math.min(100, this.satisfaction + amount));
+        UIController.updateSatisfactionUI();
+        return this.satisfaction;
+    },
+
     modifyMoney: function(amount) {
         let parsed = Number(amount);
         if (!isNaN(parsed)) {
@@ -308,13 +297,12 @@ const UIController = {
         el.innerText = text;
         if (animClass) {
             el.classList.remove(animClass);
-            void el.offsetHeight; // Reflow trigger
+            void el.offsetHeight;
             el.classList.add(animClass);
             setTimeout(() => el.classList.remove(animClass), 600);
         }
     },
 
-    // Tüm üst istatistik çubuğunu tek noktadan günceller
     syncHeaderStats: function(animTarget = null) {
         this.updateStat('moneyDisplay', `$${GameState.money}`, animTarget === 'money' ? 'money-gain' : null);
         this.updateStat('xpDisplay', `${GameState.xp} XP`, animTarget === 'xp' ? 'stat-gain' : null);
@@ -332,6 +320,13 @@ const UIController = {
     setDisplay: function(elementId, displayValue) {
         const el = document.getElementById(elementId);
         if (el) el.style.setProperty('display', displayValue, 'important');
+    }, // <-- EKSİK OLAN VİRGÜL BURAYA EKLENDİ
+
+    updateSatisfactionUI: function() {
+        const bar = document.getElementById('satisfactionBar');
+        const text = document.getElementById('satisfactionText');
+        if (bar) bar.style.width = `${GameState.satisfaction}%`;
+        if (text) text.innerText = `${Math.round(GameState.satisfaction)} / 100`;
     }
 };
 
@@ -349,18 +344,19 @@ const GameLoop = {
     },
 
     tick: function() {
-        // Kontrol şartları (Pause, Modal açıklığı vs.)
         if (GameState.isPaused || GameState.isWarningActive || GameState.isCaptchaActive ||
            document.getElementById('resultModal').style.display === 'flex') return;
 
-        // 1. Yan süreçleri işle (Sipariş teslimatları)
         this.processDeliveries(1);
 
-        // 2. Zamanı 1 saniye eksilt ve UI'ı senkronize et
+        // YENİ EKLENEN: Depo modundaysak ve yolda sipariş varsa her saniye kartlardaki sayacı tazele
+        if (GameState.currentMode === 'DEPOT' && GameState.pendingOrders.length > 0) {
+            initDepotMedicines();
+        }
+
         GameState.timeRemaining--;
         UIController.updateTimerBar();
 
-        // 3. Süre bittiyse durum yönetimine devret
         if (GameState.timeRemaining <= 0) {
             GameStateManager.handleTimeout();
         }
@@ -375,12 +371,13 @@ const GameLoop = {
         if (completedOrders.length > 0) {
             completedOrders.forEach(order => {
                 const med = GameData.getMedicineById(order.id);
-                if (med) med.count += order.quantity;
+                if (med) {
+                    med.count = Math.min(MAX_MEDICINE_STOCK, med.count + order.quantity);
+                }
             });
 
             GameState.pendingOrders = GameState.pendingOrders.filter(order => order.timeLeft > 0);
             
-            // UI Yenileme
             initDepotMedicines();
             initShopMedicines();
         }
@@ -424,13 +421,11 @@ const GameStateManager = {
 
 // === MÜŞTERİ & İLAÇ UYUM HESAPLAYICI (BUSINESS LOGIC) ===
 const TreatmentEvaluator = {
-    // Müşterinin semptom köklerini döner
     getCustomerSymptomRoots: function(customer) {
         if (!customer || !customer.symptomsList) return [];
         return customer.symptomsList.map(s => GameData.extractSymptomRoot(s));
     },
 
-    // Bir ilacın veya ilaç grubunun müşteriyi ne kadar iyileştirdiğini hesaplar
     evaluateTreatment: function(customer, selectedMedicineIds) {
         const customerRoots = this.getCustomerSymptomRoots(customer);
         const combinedMedSymptoms = [];
@@ -468,12 +463,10 @@ const TreatmentEvaluator = {
 
 // === AKILLI REÇETE VE KOMBİNASYON MOTORU ===
 const CombinationFinder = {
-    // Müşterinin semptomlarını tamamen çözen envanter kombinasyonlarını bulur
     findValidCombinations: function(customer) {
         const customerSymptomRoots = TreatmentEvaluator.getCustomerSymptomRoots(customer);
         const customerAgeGroup = customer.ageGroupId;
 
-        // 1. Envanterde stoğu olan ve yaşa uygun ilaçları süz
         const validInventoryMeds = medicines.filter(med => {
             if (med.count <= 0) return false;
             if (!med.compatibility.includes(customerAgeGroup)) return false;
@@ -482,7 +475,6 @@ const CombinationFinder = {
 
         let possibleCombinations = [];
 
-        // Tekli kombinasyonlar
         validInventoryMeds.forEach(med => {
             const treated = med.symptoms.filter(s => customerSymptomRoots.includes(s));
             possibleCombinations.push({
@@ -492,7 +484,6 @@ const CombinationFinder = {
             });
         });
 
-        // İkili kombinasyonlar
         for (let i = 0; i < validInventoryMeds.length; i++) {
             for (let j = i + 1; j < validInventoryMeds.length; j++) {
                 const med1 = validInventoryMeds[i];
@@ -501,12 +492,10 @@ const CombinationFinder = {
                 const med1Treated = med1.symptoms.filter(s => customerSymptomRoots.includes(s));
                 const med2Treated = med2.symptoms.filter(s => customerSymptomRoots.includes(s));
 
-                // Kriter 1: İlaçlardan biri tek başına tüm semptomları çözüyorsa paketleme
                 if (med1Treated.length >= customerSymptomRoots.length || med2Treated.length >= customerSymptomRoots.length) {
                     continue; 
                 }
 
-                // Kriter 2: İkinci ilaç yeni bir semptom çözmeli
                 if (!med2Treated.some(s => !med1Treated.includes(s))) {
                     continue; 
                 }
@@ -522,7 +511,6 @@ const CombinationFinder = {
             }
         }
 
-        // Doktorun reçete ettiği paketle birebir aynı olanları ele
         const prescribedIds = Array.isArray(customer.prescribedMed) ? customer.prescribedMed : [customer.prescribedMed];
         const prescribedSorted = prescribedIds.slice().sort().join(',');
 
@@ -531,12 +519,10 @@ const CombinationFinder = {
             return comboSorted !== prescribedSorted;
         });
 
-        // Kriter 3: Yalnızca TAM TEDAVİ sağlayan paketleri tut
         possibleCombinations = possibleCombinations.filter(combo => 
             combo.treatedSymptoms.length >= customerSymptomRoots.length
         );
 
-        // Ucuzdan pahalıya sırala
         return possibleCombinations.sort((a, b) => a.totalPrice - b.totalPrice);
     }
 };
@@ -544,22 +530,8 @@ const CombinationFinder = {
 // === 4. ÇEKİRDEK OYUN FONKSİYONLARI ===
 
 function setupInitialInventoryForFirstDay() {
-    // Tüm ilaçların stoklarını sıfırla
-    medicines.forEach(med => med.count = 0);
-
-    // İlk günün aktif hastalarının reçete edilen ilaçlarını tespit et
-    GameState.activeDayCustomers.forEach(customer => {
-        const prescribedIds = Array.isArray(customer.prescribedMed) 
-            ? customer.prescribedMed 
-            : [customer.prescribedMed];
-
-        prescribedIds.forEach(medId => {
-            const med = GameData.getMedicineById(medId);
-            if (med) {
-                med.count = 1; // Hastanın ihtiyacı olan ilacın stoğunu 1 yap
-            }
-        });
-    });
+    // Tüm hastalık verileri ilk günden itibaren aktif. Her ilaç envanterde 5 adetle başlar.
+    medicines.forEach(med => med.count = MAX_MEDICINE_STOCK);
 }
 
 function togglePauseGame() {
@@ -580,66 +552,49 @@ function togglePauseGame() {
     }
 }
 
+// Dynamic Müşteri Sayısı Hesabı
+function calculateDailyCustomerLimit(satisfaction) {
+    if (satisfaction <= 30) {
+        // 0 ile 30 arası: 2 ile 5 müşteri arası doğrusal oran
+        return Math.round(2 + (satisfaction / 30) * (5 - 2));
+    } else {
+        // 30 ile 100 arası: 5 ile 10 müşteri arası doğrusal oran
+        return Math.round(5 + ((satisfaction - 30) / 70) * (10 - 5));
+    }
+}
+
+// Müşteri Sayılarını Gün/Nöbet Moduna Göre Belirleme
 function generateRandomCustomersForDay() {
     GameState.activeDayCustomers = [];
     GameState.currentCustomerIndex = 0;
 
-    // 1 Hafta = 3 Gün olarak belirlendi.
-    // İlk hafta (1, 2, 3. Günler) -> Sabit 5 müşteri
-    // Sonraki haftalar (4. Gün ve sonrası) -> 5 ile 10 arası rastgele müşteri
-    if (GameState.currentDayNumber <= 3) {
-        GameState.dailyLimit = 5;
+    if (GameState.isDutyNightActive) {
+        GameState.dailyLimit = 10;
     } else {
-        GameState.dailyLimit = Math.floor(Math.random() * 6) + 5; // 5 ile 10 arası (inclusive)
+        // Müşteri sayısı memnuniyet puanına göre dinamik belirleniyor
+        GameState.dailyLimit = calculateDailyCustomerLimit(GameState.satisfaction);
     }
 
-    let availablePool = customers.filter(c =>
-        !GameState.playedCustomersPool.some(played => played.id === c.id)
-    );
-
-    // Eğer havuzda o günkü limit kadar müşteri kalmadıysa sıfırla (Sonsuz döngü / Devamlılık için)
-    if (availablePool.length < GameState.dailyLimit) {
-        GameState.playedCustomersPool = [];
-        availablePool = [...customers];
-    }
-
+    let availablePool = [...customers];
     for (let i = 0; i < GameState.dailyLimit; i++) {
-        if (availablePool.length === 0) break;
+        if (availablePool.length === 0) availablePool = [...customers];
         const randomIndex = Math.floor(Math.random() * availablePool.length);
         const selectedCustomer = availablePool[randomIndex];
         GameState.activeDayCustomers.push(selectedCustomer);
-        GameState.playedCustomersPool.push(selectedCustomer);
         availablePool.splice(randomIndex, 1);
     }
 }
 
 function updateLockScreenNotification() {
-    const listElement = document.getElementById('lockScreenDiseaseList');
-    if (!listElement) return;
-    listElement.innerHTML = '';
+    const textElement = document.getElementById('lockScreenNotificationText');
+    if (!textElement) return;
 
     if (GameState.activeDayCustomers.length === 0) {
         generateRandomCustomersForDay();
     }
 
-    // O günkü hastaların hastalık tiplerini benzersiz (unique) olarak topla
-    const activeTypeNames = [];
-    GameState.activeDayCustomers.forEach(customer => {
-        const diseaseObj = diseases.find(d => d.id === customer.disease);
-        if (diseaseObj && diseaseObj.typeName) {
-            if (!activeTypeNames.includes(diseaseObj.typeName)) {
-                activeTypeNames.push(diseaseObj.typeName);
-            }
-        }
-    });
-
-    // Toplanan hastalık tipi adlarını listeye yazdır
-    activeTypeNames.forEach(typeName => {
-        const li = document.createElement('li');
-        li.style.marginBottom = "4px";
-        li.innerText = typeName;
-        listElement.appendChild(li);
-    });
+    // Sabit bildirim metni
+    textElement.innerText = "Değerli üyemiz, yeni iş gününde başarılar dileriz! Size tavsiyemiz yeni güne başlamadan önce stoklarınızı yenilemeniz.";
 }
 
 function generatePrescriptionCodeForCustomer(customer) {
@@ -650,7 +605,7 @@ function generatePrescriptionCodeForCustomer(customer) {
     
     if (!med) return "HATA-KOD";
 
-    const cleanGroup = med.group.replace(/[^a-zA-Z0-9]/g, ''); // Özel karakter temizliği
+    const cleanGroup = med.group.replace(/[^a-zA-Z0-9]/g, '');
     const cleanDisease = cleanIdToNoZero(customer.disease);
     const cleanAge = cleanIdToNoZero(customer.ageGroupId);
 
@@ -663,15 +618,22 @@ function cleanIdToNoZero(idStr) {
 }
 
 function startDay() {
+    if (GameState.status === 'NIGHT_ACTIVE') {
+        skipNight();
+        return;
+    }
+    
     if (GameState.gameStarted) return;
     GameState.gameStarted = true;
+    
     UIController.setDisplay('lockScreenArea', 'none');
     UIController.setDisplay('appNabizContainer', 'flex');
+    
+    // Zamanlayıcı ve ilk boş bekleme periyodu SADECE butona basıldığında başlar
     enterEmptyWaitState();
     GameLoop.start();
 }
 
-// Dükkan İlaçlarını Listeleme
 function initShopMedicines() {
     const grid = document.getElementById('medGrid');
     if (!grid) return;
@@ -696,7 +658,6 @@ function initShopMedicines() {
         const card = document.createElement('div');
         card.className = 'med-card';
         card.onclick = () => addToCart(med.id);
-        const turkishSymptoms = med.symptoms.map(s => symptomNamesMap[s] || s).join(', ');
         const compatibilityNames = med.compatibility.map(ageId => ageGroupsMap[ageId] || ageId).join(', ');
         card.innerHTML = `
             <div class="med-header">
@@ -705,9 +666,8 @@ function initShopMedicines() {
             </div>
             <div class="prices-row">
                 <span class="price-sell">Satış: $${med.price}</span>
-                <span class="stock-tag">Stok: ${med.count} ad.</span>
+                <span class="stock-tag">Stok: ${med.count}/${MAX_MEDICINE_STOCK} ad.</span>
             </div>
-            <div class="med-compatibility"><strong>Tedavi:</strong> ${turkishSymptoms}</div>
             <div class="med-compatibility"><strong>Uygunluk:</strong> ${compatibilityNames}</div>
         `;
         grid.appendChild(card);
@@ -735,7 +695,6 @@ function initShopMedicines() {
     });
 }
 
-// Depo İlaçlarını Listeleme
 function initDepotMedicines() {
     const grid = document.getElementById('depotMedGrid');
     if (!grid) return;
@@ -765,22 +724,21 @@ function initDepotMedicines() {
             </div>`;
         }
 
-        // Stok durumuna göre renk değişimi (Stok 0 ise kırmızımsı uyarı rengi, değilse standart mavi)
+        const isFullStock = (med.count + totalPendingQty) >= MAX_MEDICINE_STOCK;
         const stockStyle = med.count === 0 
             ? 'background: rgba(239, 68, 68, 0.15); color: #f87171;' 
             : 'background: rgba(59, 130, 246, 0.1); color: var(--accent-color);';
 
         card.innerHTML = `
             <div class="med-header">
-                <div class="med-info"><h4>${med.name}</h4></div>
+                <div class="med-info"><h4>${med.name} ${isFullStock ? '<span style="color:#ef4444; font-size:0.7rem;">(Maks Stok)</span>' : ''}</h4></div>
                 <span class="med-tag">${med.group}</span>
             </div>
             <div class="prices-row">
                 <span class="price-buy">Maliyet: $${med.buyPrice}</span>
-                <span class="stock-tag" style="${stockStyle}">Stok: ${med.count} ad.</span>
+                <span class="stock-tag" style="${stockStyle}">Stok: ${med.count}/${MAX_MEDICINE_STOCK} ad.</span>
             </div>
             <div class="med-compatibility"><strong>Tavsiye Satış:</strong> <span class="price-sell">$${med.price}</span></div>
-            <div class="med-compatibility"><strong>Tedavi:</strong> ${turkishSymptoms}</div>
             <div class="med-compatibility"><strong>Uygunluk:</strong> ${compatibilityNames}</div>
             ${deliveryBadge}
         `;
@@ -790,7 +748,7 @@ function initDepotMedicines() {
 
 function enterEmptyWaitState() {
     GameState.status = 'EMPTY_WAIT';
-    GameState.timeRemaining = 10;
+    GameState.timeRemaining = 5; // 10 saniyeden 5 saniyeye düşürüldü
     GameState.isNabizVerified = false;
 
     const lockWarning = document.getElementById('nabizLockWarning');
@@ -811,23 +769,35 @@ function enterEmptyWaitState() {
         overlay.innerHTML = `<div class="customer-arrival-text">Şu anda dükkanda müşteri yok...<br><span style="font-size:0.8rem; color:var(--text-muted);">Bugün bakılan: ${GameState.dayServedCount}/${GameState.dailyLimit}</span></div>`;
     }
 
-    document.getElementById('customerPanelTitle').innerText = `Gün ${GameState.currentDayNumber} - Boş Zaman Periyodu (10 Sn)`;
+    const modeTitle = GameState.isDutyNightActive ? "Gece Nöbeti Mesaisi" : `Gün ${GameState.currentDayNumber}`;
+    document.getElementById('customerPanelTitle').innerText = `${modeTitle} - Boş Zaman Periyodu (5 Sn)`;
     document.getElementById('timerBar').className = "timer-bar waiting";
     UIController.updateTimerBar();
 }
 
 function enterCustomerActiveState() {
-    // Captcha tetikleme kontrolü
+    // Güvenlik Kontrolü: İndeks taşmasını önle
+    if (GameState.currentCustomerIndex >= GameState.activeDayCustomers.length) {
+        if (GameState.isDutyNightActive) {
+            GameState.isDutyNightActive = false;
+            progressToNextDay();
+        } else {
+            enterNightState();
+        }
+        return;
+    }
+
     if (GameState.dailyCaptchaTriggers.includes(GameState.currentCustomerIndex)) {
         triggerCaptchaTest();
-        // Tetiklenen indeksi temizle ki aynı müşteride tekrar açılmasın
         GameState.dailyCaptchaTriggers = GameState.dailyCaptchaTriggers.filter(idx => idx !== GameState.currentCustomerIndex);
     }
 
     GameState.status = 'CUSTOMER_ACTIVE';
     GameState.timeRemaining = GameState.maxCustomerPatience;
     UIController.setDisplay('customerOverlay', 'none');
-    document.getElementById('customerPanelTitle').innerText = `Gün ${GameState.currentDayNumber} - Müşteri Süresi (${GameState.maxCustomerPatience} Sn)`;
+
+    const modeTitle = GameState.isDutyNightActive ? "Gece Nöbeti Mesaisi" : `Gün ${GameState.currentDayNumber}`;
+    document.getElementById('customerPanelTitle').innerText = `${modeTitle} - Müşteri Süresi (${GameState.maxCustomerPatience} Sn)`;
     document.getElementById('timerBar').className = "timer-bar active-customer";
     GameState.isNabizVerified = false;
 
@@ -847,8 +817,6 @@ function enterCustomerActiveState() {
     UIController.updateTimerBar();
 }
 
-// === KOMBİNASYONLU NABIZ ÖNERİ SİSTEMİ ===
-
 function confirmNabizAccess() {
     if (GameState.status !== 'CUSTOMER_ACTIVE') {
         alert("Eczanede şu anda aktif bir hasta bulunmamaktadır!");
@@ -864,30 +832,32 @@ function confirmNabizAccess() {
     const diseaseObj = GameData.getDiseaseById(currentCustomer.disease);
     GameState.isNabizVerified = true;
 
-    // 1. Temel Bilgileri Yazdır
     document.getElementById('n-rep-name').innerText = currentCustomer.name;
     document.getElementById('n-rep-disease').innerText = diseaseObj ? diseaseObj.name : "Bilinmiyor";
     document.getElementById('n-rep-age').innerText = currentCustomer.ageGroup;
 
-    // 2. Doktor Reçetesi Butonu
     const recMedContainer = document.getElementById('n-rep-med');
     recMedContainer.innerHTML = '';
 
     if (prescribedMeds.length > 0) {
         const isAllInStock = prescribedMeds.every(m => m.count > 0);
         const comboNames = prescribedMeds.map(m => m.name).join(' + ');
-        const comboTotalPrice = prescribedMeds.reduce((sum, m) => sum + m.price, 0);
+        
+        // Fiyat Hesabı (Gece %20 Zamlı)
+        const baseTotalPrice = prescribedMeds.reduce((sum, m) => sum + m.price, 0);
+        const finalTotalPrice = GameState.isDutyNightActive ? Math.round(baseTotalPrice * 1.2) : baseTotalPrice;
+
         const btn = document.createElement('button');
         btn.type = 'button';
 
         if (isAllInStock) {
-            btn.className = 'nabiz-med-btn recommended';
-            btn.onclick = () => addMultipleToCartDirect(prescribedMeds.map(m => m.id));
-            btn.innerHTML = `
-                <div style="display:flex; flex-direction:column; text-align:left;">
-                    <span><strong>[Doktor Reçetesi]</strong> ${comboNames}</span>
-                </div>
-                <strong>$${comboTotalPrice}</strong>
+        btn.className = 'nabiz-med-btn recommended';
+        btn.onclick = () => addMultipleToCartDirect(prescribedMeds.map(m => m.id));
+        btn.innerHTML = `
+            <div style="display:flex; flex-direction:column; text-align:left;">
+                <span><strong>[Doktor Reçetesi]</strong> ${comboNames}</span>
+            </div>
+            <strong>$${finalTotalPrice}</strong>
             `;
         } else {
             btn.className = 'nabiz-med-btn disabled';
@@ -897,7 +867,7 @@ function confirmNabizAccess() {
                     <span><strong>[Doktor Reçetesi]</strong> ${comboNames}</span>
                     <span class="out-of-stock-warn">Eksik Stok var!</span>
                 </div>
-                <strong>$${comboTotalPrice}</strong>
+                <strong>$${finalTotalPrice}</strong>
             `;
         }
         recMedContainer.appendChild(btn);
@@ -905,7 +875,6 @@ function confirmNabizAccess() {
         recMedContainer.innerText = "Önerilen Reçete Bulunamadı";
     }
 
-    // 3. Envanterdeki Alternatif Kombinasyonları Render Et
     const availableOptionsList = document.getElementById('n-rep-options-list');
     availableOptionsList.innerHTML = '';
 
@@ -916,6 +885,10 @@ function confirmNabizAccess() {
         possibleCombinations.forEach(combo => {
             const comboNames = combo.meds.map(m => m.name).join(' + ');
             const matchTag = `<span style="color:#10b981; font-weight:bold;">[Tam Tedavi]</span>`;
+            
+            const baseComboPrice = combo.totalPrice;
+            const finalComboPrice = GameState.isDutyNightActive ? Math.round(baseComboPrice * 1.2) : baseComboPrice;
+
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.className = 'nabiz-med-btn option';
@@ -926,7 +899,7 @@ function confirmNabizAccess() {
                     <span>${matchTag} ${comboNames}</span>
                     <small style="color:var(--text-muted); font-size:0.75rem;">Çözülen Semptom: ${combo.treatedSymptoms.length}/${customerSymptomRoots.length}</small>
                 </div>
-                <strong>$${combo.totalPrice}</strong>
+                <strong>$${finalComboPrice}</strong>
             `;
             availableOptionsList.appendChild(btn);
         });
@@ -941,15 +914,11 @@ function confirmNabizAccess() {
         lockWarning.style.background = "rgba(16, 185, 129, 0.1)";
         lockWarning.style.borderColor = "var(--success-color)";
         lockWarning.style.color = "#34d399";
-        lockWarning.innerText = "✓ Müşteri bilgileri getirildi! Seçtiğiniz ilaç paketi doğrudan sepete aktarılacaktır.";
+        const textTariff = GameState.isDutyNightActive ? " (%20 Gece Zamlı Satış)" : "";
+        lockWarning.innerText = `✓ Müşteri bilgileri getirildi! Seçtiğiniz ilaç paketi doğrudan sepete aktarılacaktır.${textTariff}`;
     }
 
     renderCart();
-
-    setTimeout(() => {
-        const phoneScreen = document.getElementById('phoneScreen');
-        if (phoneScreen) phoneScreen.scrollTo({ top: phoneScreen.scrollHeight, behavior: 'smooth' });
-    }, 100);
 }
 
 function addMultipleToCartDirect(medIds) {
@@ -973,26 +942,40 @@ function addToCartDirect(medId) {
 }
 
 function enterNightState() {
+    // EĞER NÖBETÇİ GECE MESAİSİ YENİ BİTTİYSE: Gece beklemesine girmeden direkt sonraki güne geç
+    if (GameState.isDutyNightActive && GameState.dayServedCount >= GameState.dailyLimit) {
+        GameState.isDutyNightActive = false;
+        progressToNextDay();
+        return;
+    }
+
+    const dayOfCurrentWeek = ((GameState.currentDayNumber - 1) % 3) + 1;
+
+    // 1. Nöbetçi gün geldiyse Nöbetçi Gece Sekansını Başlat
+    if (GameState.chosenDutyDay === dayOfCurrentWeek) {
+        startDutyNightSequence();
+        return;
+    }
+
+    // 2. Normal Gece Modu
     GameState.status = 'NIGHT_ACTIVE';
-    
-    // İlk gece ise 300 saniye (5 dk), diğer geceler 120 saniye (2 dk)
+    GameState.gameStarted = false;
+    GameState.isDutyNightActive = false;
+
     const isFirstNight = GameState.currentDayNumber === 1;
     GameState.timeRemaining = isFirstNight ? 300 : GameState.nightDuration;
-    
-    GameState.gameStarted = false; // Telefon kilit ekranına düşecek
 
-    // 1. Bir sonraki günün müşterilerini şimdiden seç ve kilit ekranı bildirimini güncelle
+    // Bir sonraki günün müşterilerini seç ve bildirimi güncelle
     generateRandomCustomersForDay();
     updateLockScreenNotification();
 
-    // 2. Telefon Arayüzünü Kilit Ekranına Geçir
+    // Arayüzleri Geçiş Yap
     UIController.setDisplay('appNabizContainer', 'none');
     UIController.setDisplay('nabizPrescriptionReport', 'none');
     UIController.setDisplay('lockScreenArea', 'flex');
 
-    // 3. Kilit ekranı saatini ve butonunu güncelle
     const lockClock = document.getElementById('lockScreenClock');
-    if (lockClock) lockClock.innerText = "22:00"; 
+    if (lockClock) lockClock.innerText = "22:00";
 
     const startBtn = document.getElementById('startBtn');
     const nightMinutesText = isFirstNight ? "5 Dk" : "2 Dk";
@@ -1000,7 +983,6 @@ function enterNightState() {
         startBtn.innerHTML = `⏩ Geceyi Geç (${nightMinutesText})`;
     }
 
-    // 4. Panel Başlığı ve Overlay Güncellemesi
     document.getElementById('customerPanelTitle').innerText = `Gün ${GameState.currentDayNumber} - Gece Vakti (${nightMinutesText})`;
     document.getElementById('timerBar').className = "timer-bar waiting";
     UIController.updateTimerBar();
@@ -1019,8 +1001,52 @@ function enterNightState() {
     }
 }
 
+// 3. Madde: Nöbetçi Gece Başlangıcı (5 sn geri sayım + Gece Nöbeti)
+function startDutyNightSequence() {
+    GameState.status = 'CUSTOMER_ACTIVE';
+    GameState.isDutyNightActive = true;
+    GameState.dayServedCount = 0;
+    GameState.currentCustomerIndex = 0;
+
+    // 10 Müşterilik Gece Havuzunu Oluştur
+    generateRandomCustomersForDay();
+
+    let countdown = 5;
+    const overlay = document.getElementById('customerOverlay');
+    if (overlay) {
+        UIController.setDisplay('customerOverlay', 'flex');
+        overlay.innerHTML = `
+            <div class="customer-arrival-text" style="color: var(--warning-color);">
+                🚨 NÖBETÇİ ECZANE MODU BAŞLIYOR!<br>
+                <span style="font-size: 0.9rem; color: #34d399;">ℹ️ Gece nöbeti boyunca tüm ilaçlar %20 zamlı satılır!</span><br>
+                <span style="font-size:2rem;">${countdown}</span>
+            </div>`;
+    }
+
+    const countInterval = setInterval(() => {
+        countdown--;
+        if (overlay && countdown > 0) {
+            overlay.innerHTML = `
+                <div class="customer-arrival-text" style="color: var(--warning-color);">
+                    🚨 NÖBETÇİ ECZANE MODU BAŞLIYOR!<br>
+                    <span style="font-size: 0.9rem; color: #34d399;">ℹ️ Gece nöbeti boyunca tüm ilaçlar %20 zamlı satılır!</span><br>
+                    <span style="font-size:2rem;">${countdown}</span>
+                </div>`;
+        }
+        if (countdown <= 0) {
+            clearInterval(countInterval);
+            
+            UIController.setDisplay('lockScreenArea', 'none');
+            UIController.setDisplay('appNabizContainer', 'flex');
+            GameState.gameStarted = true;
+            
+            enterEmptyWaitState();
+        }
+    }, 1000);
+}
+
 function handleLockScreenButtonClick() {
-    // Oyun ilk defa başlatılıyorsa günü başlatır, Gece vaktiyse geceyi atlar
+    // Eğer gece vaktindeysek Geceyi Geç, değilse Günü Başlat
     if (GameState.status === 'NIGHT_ACTIVE') {
         skipNight();
     } else {
@@ -1031,58 +1057,91 @@ function handleLockScreenButtonClick() {
 function skipNight() {
     if (GameState.status !== 'NIGHT_ACTIVE') return;
 
-    // O anki gecenin toplam süresini (300sn veya 120sn) tespit et
+    // Gece süresi kadar teslimatları öne çek
     const currentNightTime = (GameState.currentDayNumber === 1) ? 300 : GameState.nightDuration;
-
-    // Teslimatları gecenin süresi kadar öne alıp anında tamamla
     GameLoop.processDeliveries(currentNightTime);
 
     GameState.timeRemaining = 0;
-    GameStateManager.onNightTimeout();
+    
+    // Anında yeni güne ilerle
+    progressToNextDay();
 }
 
 function progressToNextDay() {
     GameState.currentDayNumber++;
     GameState.dayServedCount = 0;
-    GameState.gameStarted = true;
+    GameState.gameStarted = false;
     GameState.isPaused = false;
+    GameState.isDutyNightActive = false;
+    GameState.status = 'LOCK_SCREEN';
 
-    // Hafta ve Gün hesaplaması (1 Hafta = 3 Gün)
     const currentWeek = Math.floor((GameState.currentDayNumber - 1) / 3) + 1;
     const dayOfCurrentWeek = ((GameState.currentDayNumber - 1) % 3) + 1;
+
+    const dayTextEl = document.getElementById('lockScreenDayText');
+    if (dayTextEl) {
+        dayTextEl.innerText = `${currentWeek}. HAFTA - ${dayOfCurrentWeek}. GÜN`;
+    }
 
     const lockClock = document.getElementById('lockScreenClock');
     if (lockClock) lockClock.innerText = "08:00";
 
-    // Kilit ekranındaki gün alt başlığını güncelle (Örn: "2. HAFTA - 1. GÜN")
-    const lockDaySubtext = document.querySelector('#lockScreenArea style + div div:last-child');
-    if (lockDaySubtext) {
-        lockDaySubtext.innerText = `${currentWeek}. HAFTA - ${dayOfCurrentWeek}. GÜN`;
-    }
-
-    // Buton metnini sıfırla
     const startBtn = document.getElementById('startBtn');
-    if (startBtn) {
-        startBtn.innerHTML = "🔑 Oyunu Başlat";
+    if (startBtn) startBtn.innerHTML = "🔑 Güne Başla";
+
+    UIController.setDisplay('lockScreenArea', 'flex');
+    UIController.setDisplay('appNabizContainer', 'none');
+
+    const overlay = document.getElementById('customerOverlay');
+    if (overlay) {
+        UIController.setDisplay('customerOverlay', 'flex');
+        overlay.innerHTML = `
+            <div class="customer-arrival-text" style="color: var(--accent-color);">
+                ☀️ Gece Sona Erdi<br>
+                <span style="font-size:0.85rem; color:var(--text-muted); font-weight:normal;">
+                    Yeni güne başlamak için telefon ekranından eczaneyi açın.
+                </span>
+            </div>
+        `;
     }
 
-    // Telefon ekranını kilit ekranından Nabız uygulamasına al
-    UIController.setDisplay('lockScreenArea', 'none');
-    UIController.setDisplay('appNabizContainer', 'flex');
+    // Nöbetçi Eczane Seçimi: SADECE ÇİFT HAFTALARDA (2., 4., 6. haftalar vb.)
+    const isDutySelectionWeek = (currentWeek % 2 === 0);
+    
+    if (dayOfCurrentWeek === 1 && isDutySelectionWeek) {
+        GameState.chosenDutyDay = null;
+        document.getElementById('dutySelectModal').style.display = 'flex';
+    } else if (dayOfCurrentWeek === 1 && !isDutySelectionWeek) {
+        GameState.chosenDutyDay = null; // Tek sayılı haftalarda nöbetçi gün seçimi kapalı
+    }
 
-    enterEmptyWaitState();
+    // 3. Geliştirme aktifse gün sonunda stoklar bedelsiz olarak maks kapasiteye tamamlanır
+    if (GameState.autoRestockEnabled) {
+        medicines.forEach(med => {
+            med.count = MAX_MEDICINE_STOCK;
+        });
+    }
+
+    generateRandomCustomersForDay();
+    updateLockScreenNotification();
     initShopMedicines();
     setupDailyCaptchaSchedule();
     renderCart();
 }
 
+// Nöbetçi gün seçim fonksiyonu
+function selectDutyDay(dayNumber) {
+    GameState.chosenDutyDay = dayNumber;
+    document.getElementById('dutySelectModal').style.display = 'none';
+    alert(`${dayNumber}. Gün Gece Nöbetçisi olarak belirlendiniz!`);
+}
+
 function setupDailyCaptchaSchedule() {
-    // Günde en az 1, en fazla 2 kere
-    const count = Math.floor(Math.random() * 2) + 1; 
+    // Günde en az 0, en fazla 3 kez Captcha çıksın
+    const count = Math.floor(Math.random() * 4); // 0, 1, 2, veya 3
     GameState.dailyCaptchaTriggers = [];
     
     while (GameState.dailyCaptchaTriggers.length < count) {
-        // 0 ile dailyLimit-1 arasında rastgele müşteri indeksleri
         const randomIndex = Math.floor(Math.random() * GameState.dailyLimit);
         if (!GameState.dailyCaptchaTriggers.includes(randomIndex)) {
             GameState.dailyCaptchaTriggers.push(randomIndex);
@@ -1100,7 +1159,7 @@ function triggerGameOverState() {
             <div class="customer-arrival-text" style="color: var(--success-color); font-size:1.3rem; line-height: 1.6;">
                 Tebrikler Eczacı!<br>
                 <span style="font-size:0.95rem; color:white; font-weight: normal;">
-                    4 gün boyunca 20 hastanın tamamına başarıyla hizmet verdin ve prototipi tamamladın!
+                    Günü başarıyla tamamladın!
                 </span>
             </div>
         `;
@@ -1109,6 +1168,9 @@ function triggerGameOverState() {
 
 function handleCustomerTimeout() {
     const currentCustomer = GameState.activeDayCustomers[GameState.currentCustomerIndex];
+    
+    // Etkiler eşitlendi
+    GameState.modifySatisfaction(-5);
     GameState.modifyXp(0);
     GameState.modifyEp(-10);
     UIController.syncHeaderStats('ep');
@@ -1116,16 +1178,13 @@ function handleCustomerTimeout() {
     document.getElementById('m-title').innerText = `${currentCustomer.name} Eczaneyi Terk Etti!`;
     document.getElementById('m-desc').innerHTML = `
         <span style="color: var(--danger-color); font-weight: bold;">Müşteri işlem süresi bittiği için hizmet alamadan ayrıldı.</span><br><br>
+        <strong>Müşteri Memnuniyeti Etkisi:</strong> <span style="color: var(--danger-color); font-weight: bold;">-5 Puan</span><br>
         <strong>Kazanılan Deneyim:</strong> <span style="color: #a855f7; font-weight: bold;">+0 XP</span><br>
         <strong>Eczane Puanı Etkisi:</strong> <span style="color: var(--danger-color); font-weight: bold;">-10 EP</span>
     `;
 
-    let reportHTML = "";
-    currentCustomer.symptomsList.forEach(symptom => {
-        const turkishSymptomName = symptomNamesMap[symptom] || symptom;
-        reportHTML += `<li class="failed">İyileştirilemedi: <strong>${turkishSymptomName}</strong> (Süre bitti)</li>`;
-    });
-    document.getElementById('m-list').innerHTML = reportHTML;
+    // Semptom listesini yazdırmak yerine sadeleştirildi
+    document.getElementById('m-list').innerHTML = `<li class="failed">İlaç verilmedi.</li>`;
 
     document.getElementById('resultModal').style.display = 'flex';
     document.getElementById('customerPanel').style.borderColor = "var(--danger-color)";
@@ -1134,6 +1193,12 @@ function handleCustomerTimeout() {
     GameState.currentCustomerIndex++;
     GameState.resetCart();
     renderCart();
+
+    // Nöbet bitti mi kontrolü
+    if (GameState.dayServedCount >= GameState.dailyLimit && GameState.isDutyNightActive) {
+        GameState.isDutyNightActive = false;
+        progressToNextDay();
+    }
 }
 
 function switchToDepot() {
@@ -1183,9 +1248,19 @@ function addToCart(medId) {
         if (med.count <= 0 || GameState.cart.length >= 2 || GameState.cart.some(item => item.id === medId)) return;
         GameState.cart.push({ id: medId, quantity: 1 });
     } else {
-        // DEPOT Modu: Kısıtlamalara takılmadan sepete ekleme yapabilir
-        const existingItem = GameState.cart.find(item => item.id === medId);
-        if (existingItem) existingItem.quantity += 1;
+        // DEPOT Modu: Maksimum 5 stok sınırı kontrolü
+        const existingInCart = GameState.cart.find(item => item.id === medId);
+        const cartQty = existingInCart ? existingInCart.quantity : 0;
+        
+        const ordersForThisMed = GameState.pendingOrders.filter(o => o.id === medId);
+        const pendingQty = ordersForThisMed.reduce((sum, o) => sum + o.quantity, 0);
+
+        if (med.count + pendingQty + cartQty + 1 > MAX_MEDICINE_STOCK) {
+            alert(`⚠️ Envanterinizde bu ilaçtan en fazla ${MAX_MEDICINE_STOCK} adet bulundurabilirsiniz! (Mevcut: ${med.count}, Yolda: ${pendingQty}, Sepette: ${cartQty})`);
+            return;
+        }
+
+        if (existingInCart) existingInCart.quantity += 1;
         else GameState.cart.push({ id: medId, quantity: 1 });
     }
     renderCart();
@@ -1202,8 +1277,26 @@ function updateCartItemQuantity(medId, value) {
     const item = GameState.cart.find(i => i.id === medId);
     if (!item) return;
     const qty = parseInt(value);
-    if (qty <= 0 || isNaN(qty)) removeFromCart(medId);
-    else item.quantity = qty;
+    
+    if (qty <= 0 || isNaN(qty)) {
+        removeFromCart(medId);
+        return;
+    }
+
+    if (GameState.currentMode === 'DEPOT') {
+        const med = GameData.getMedicineById(medId);
+        const ordersForThisMed = GameState.pendingOrders.filter(o => o.id === medId);
+        const pendingQty = ordersForThisMed.reduce((sum, o) => sum + o.quantity, 0);
+
+        if (med && (med.count + pendingQty + qty > MAX_MEDICINE_STOCK)) {
+            alert(`⚠️ Envanterinizde bu ilaçtan en fazla ${MAX_MEDICINE_STOCK} adet bulundurabilirsiniz!`);
+            item.quantity = Math.max(1, MAX_MEDICINE_STOCK - (med.count + pendingQty));
+            renderCart();
+            return;
+        }
+    }
+
+    item.quantity = qty;
     renderCart();
 }
 
@@ -1224,7 +1317,6 @@ function renderCart() {
         }, 0);
         titleElement.innerText = `Toptan Alım Sepeti (Toplam Tutar: $${totalCost})`;
 
-        // DEPOT Modu İçin Buton Kontrolü
         if (GameState.cart.length === 0) {
             cartEmpty.style.display = 'block';
             submitBtn.disabled = true;
@@ -1253,7 +1345,7 @@ function renderCart() {
                     <span>${originalMed.name} ($${originalMed.buyPrice})</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <input type="number" min="1" value="${item.quantity}"
+                    <input type="number" min="1" max="${MAX_MEDICINE_STOCK}" value="${item.quantity}"
                            style="width: 50px; background: #262b37; border: 1px solid #3b82f6; color: white; border-radius: 4px; padding: 2px 4px; text-align: center; font-weight: bold;"
                            onchange="updateCartItemQuantity('${item.id}', this.value)">
                     <span class="cart-item-remove" onclick="removeFromCart('${item.id}')">×</span>
@@ -1263,7 +1355,6 @@ function renderCart() {
         });
 
     } else {
-        // SHOP Modu
         titleElement.innerText = "Sepet (Müşteri Reçetesi)";
         submitBtn.innerText = "Onayla";
 
@@ -1318,7 +1409,6 @@ function handleShopConfirm() {
     const customerPanel = document.getElementById('customerPanel');
     const customerAge = currentCustomer.ageGroup.trim().toLowerCase();
 
-    // Yaş uyumluluğu kontrolü
     for (let item of GameState.cart) {
         const originalMed = GameData.getMedicineById(item.id);
         if (originalMed) {
@@ -1346,16 +1436,43 @@ function handleShopConfirm() {
     let totalProfit = 0;
     const selectedMedIds = GameState.cart.map(item => item.id);
 
-    // Stok düşürme ve kâr hesaplama
     GameState.cart.forEach(item => {
         const targetMed = GameData.getMedicineById(item.id);
         if (targetMed) {
             targetMed.count--;
-            totalProfit += targetMed.price;
+            const itemPrice = GameState.isDutyNightActive 
+                ? Math.round(targetMed.price * 1.2) 
+                : targetMed.price;
+            totalProfit += itemPrice;
         }
     });
 
-    // Merkezi Değerlendirme Modülümüzü Çalıştırıyoruz
+    // Reçetedeki Asıl İlaçların Normal Fiyat Toplamı
+    const prescribedIds = Array.isArray(currentCustomer.prescribedMed) 
+        ? currentCustomer.prescribedMed 
+        : [currentCustomer.prescribedMed];
+    
+    const originalPrescriptionPrice = prescribedIds.reduce((sum, id) => {
+        const m = GameData.getMedicineById(id);
+        return sum + (m ? m.price : 0);
+    }, 0);
+
+    // Memnuniyet Puanı Kuralları Hesabı
+    let satisfactionChange = 0;
+    const isExactPrescription = prescribedIds.sort().join(',') === selectedMedIds.sort().join(',');
+
+    if (isExactPrescription) {
+        satisfactionChange += 5; // Reçetedeki ilacı satmak +5
+    }
+
+    if (totalProfit > originalPrescriptionPrice) {
+        satisfactionChange -= 5; // Reçete fiyatından pahalıya satmak -5
+    } else if (totalProfit < originalPrescriptionPrice) {
+        satisfactionChange += 7; // Reçete fiyatından ucuza satmak +7
+    }
+
+    GameState.modifySatisfaction(satisfactionChange);
+
     const evaluation = TreatmentEvaluator.evaluateTreatment(currentCustomer, selectedMedIds);
 
     let reportHTML = "";
@@ -1367,7 +1484,7 @@ function handleShopConfirm() {
         }
     });
 
-    let earnedXp = evaluation.isPerfect ? 10 : 2;
+    let earnedXp = 0;
     let earnedEp = evaluation.isPerfect ? 5 : -5;
 
     GameState.modifyMoney(totalProfit);
@@ -1375,10 +1492,15 @@ function handleShopConfirm() {
     GameState.modifyEp(earnedEp);
     UIController.syncHeaderStats('money');
 
+    // Memnuniyet değişim metni rengi ve işareti
+    let satColorStyle = satisfactionChange >= 0 ? "color: var(--success-color);" : "color: var(--danger-color);";
+    let satSign = satisfactionChange > 0 ? "+" : "";
+
     document.getElementById('m-title').innerText = `${currentCustomer.name} - Teşhis Sonucu`;
     let scoreColorClass = evaluation.isPerfect ? "color: var(--success-color);" : "color: var(--danger-color);";
     document.getElementById('m-desc').innerHTML = `
         Satılan ilaçlar başarıyla teslim edildi. Eczanenize <strong>+$${totalProfit}</strong> eklendi.<br><br>
+        <strong>Müşteri Memnuniyeti Etkisi:</strong> <span style="${satColorStyle} font-weight: bold;">${satSign}${satisfactionChange} Puan</span><br>
         <strong>Kazanılan Deneyim:</strong> <span style="color: #a855f7; font-weight: bold;">+${earnedXp} XP</span><br>
         <strong>Eczane Puanı Etkisi:</strong> <span style="${scoreColorClass} font-weight: bold;">${earnedEp > 0 ? "+" + earnedEp : earnedEp} EP</span>
     `;
@@ -1410,11 +1532,9 @@ function handleDepotConfirm() {
         return;
     }
 
-    // 1. Bakiyeyi Düş ve UI'ı Güncelle
     GameState.modifyMoney(-totalCost);
     UIController.syncHeaderStats('money');
 
-    // 2. Siparişleri Teslimat Listesine Ekle (30 Saniye Teslimat)
     GameState.cart.forEach(item => {
         const originalMed = GameData.getMedicineById(item.id);
         GameState.pendingOrders.push({
@@ -1427,7 +1547,6 @@ function handleDepotConfirm() {
 
     alert(`Siparişiniz başarıyla alındı! $${totalCost} tutarındaki ilaçlar 30 saniye içinde depoya ulaşacaktır.`);
 
-    // 3. Sepeti Temizle ve Ekranı Yenile
     GameState.resetCart();
     renderCart();
     initDepotMedicines();
@@ -1440,8 +1559,14 @@ function closeModal() {
     initShopMedicines();
 
     if (GameState.dayServedCount >= GameState.dailyLimit) {
-        enterNightState(); // Limit dolunca Geceye geç
+        if (GameState.isDutyNightActive) {
+            GameState.isDutyNightActive = false;
+            progressToNextDay();
+        } else {
+            enterNightState();
+        }
     } else {
+        // Gün içi devam ediyorsa sonraki müşteriyi bekle
         enterEmptyWaitState();
     }
 }
@@ -1497,23 +1622,20 @@ function renderCaptchaTest() {
     statusText.innerText = "Bir kelime seçin, ardından yazı rengine denk gelen topa tıklayın.";
     statusText.style.color = "var(--warning-color)";
 
-    // Derangement (Hiçbir kelimenin kendi rengiyle yazılmaması garantisi)
     let colorAssignments = shuffleArray(CAPTCHA_COLORS);
     while (colorAssignments.some((c, idx) => c.id === CAPTCHA_COLORS[idx].id)) {
         colorAssignments = shuffleArray(CAPTCHA_COLORS);
     }
 
-    // Kelimelerin ve Topların Ekrandaki Sırasını Karıştır
     const shuffledWords = shuffleArray(CAPTCHA_COLORS.map((colorObj, index) => ({
         text: colorObj.name,
-        targetColorId: colorAssignments[index].id, // Doğru eşleşecek renk ID'si (Yazı Rengi)
+        targetColorId: colorAssignments[index].id,
         textColorHex: colorAssignments[index].hex,
         id: colorObj.id
     })));
 
     const shuffledBalls = shuffleArray(CAPTCHA_COLORS);
 
-    // Kelimeleri Render Et (Sol Taraf)
     shuffledWords.forEach(wordData => {
         const btn = document.createElement('button');
         btn.className = 'captcha-word-btn';
@@ -1524,7 +1646,6 @@ function renderCaptchaTest() {
         wordsContainer.appendChild(btn);
     });
 
-    // Renk Toplarını Render Et (Sağ Taraf)
     shuffledBalls.forEach(ballData => {
         const ball = document.createElement('div');
         ball.className = 'captcha-ball-btn';
@@ -1555,7 +1676,6 @@ function selectCaptchaBall(ballElement) {
     const statusText = document.getElementById('captchaStatus');
 
     if (targetColor === clickedColor) {
-        // Doğru Eşleşme
         GameState.selectedCaptchaWord.classList.remove('selected');
         GameState.selectedCaptchaWord.classList.add('matched');
         ballElement.classList.add('matched');
@@ -1572,7 +1692,6 @@ function selectCaptchaBall(ballElement) {
             }, 600);
         }
     } else {
-        // Hatalı Eşleşme
         statusText.innerText = "✕ Yanlış Renk! Lütfen tekrar deneyin.";
         statusText.style.color = "var(--danger-color)";
         
@@ -1584,6 +1703,210 @@ function selectCaptchaBall(ballElement) {
 function completeCaptchaTest() {
     document.getElementById('captchaModal').style.display = 'none';
     GameState.isCaptchaActive = false;
+}
+
+// === GELİŞTİRİCİ KISAYOLU: GÜNÜ HIZLICA GEÇ (AUTO-SIMULATE) ===
+function fastForwardDay() {
+    // Sadece aktif gün veya boş bekleme esnasında çalışsın
+    if (GameState.status !== 'CUSTOMER_ACTIVE' && GameState.status !== 'EMPTY_WAIT') {
+        console.warn("Kısayol sadece gündüz mesaisi esnasında kullanılabilir.");
+        return;
+    }
+
+    // Günü henüz başlatmadıysa güvenli başlatma yap
+    if (!GameState.gameStarted) {
+        GameState.gameStarted = true;
+        UIController.setDisplay('lockScreenArea', 'none');
+        UIController.setDisplay('appNabizContainer', 'flex');
+    }
+
+    // O gün kalan tüm müşterileri döngüyle anında simüle et
+    while (GameState.currentCustomerIndex < GameState.dailyLimit) {
+        const customer = GameState.activeDayCustomers[GameState.currentCustomerIndex];
+        if (!customer) break;
+
+        const prescribedIds = Array.isArray(customer.prescribedMed) 
+            ? customer.prescribedMed 
+            : [customer.prescribedMed];
+
+        // 1. Durum: Doktor Reçetesi Envanterde Var Mı?
+        const hasPrescribedInStock = prescribedIds.every(id => {
+            const med = GameData.getMedicineById(id);
+            return med && med.count > 0;
+        });
+
+        if (hasPrescribedInStock) {
+            // Reçetedeki ilaçları sat
+            let totalProfit = 0;
+            prescribedIds.forEach(id => {
+                const med = GameData.getMedicineById(id);
+                med.count--;
+                const itemPrice = GameState.isDutyNightActive ? Math.round(med.price * 1.2) : med.price;
+                totalProfit += itemPrice;
+            });
+
+            GameState.modifyMoney(totalProfit);
+            GameState.modifyXp(0);
+            GameState.modifyEp(5); // Başarılı satış puanı
+        } else {
+            // 2. Durum: Alternatif Kombinasyon Ara
+            const validCombos = CombinationFinder.findValidCombinations(customer);
+            if (validCombos.length > 0) {
+                const bestCombo = validCombos[0]; // En ucuz tam tedavi alternatifini seç
+                let totalProfit = 0;
+                
+                bestCombo.meds.forEach(med => {
+                    med.count--;
+                    const itemPrice = GameState.isDutyNightActive ? Math.round(med.price * 1.2) : med.price;
+                    totalProfit += itemPrice;
+                });
+
+                GameState.modifyMoney(totalProfit);
+                GameState.modifyXp(0);
+                GameState.modifyEp(5);
+            } else {
+                // 3. Durum: Hiçbir İlaç Yoksa Cezalandır ve Gönder
+                GameState.modifyXp(0);
+                GameState.modifyEp(-10); // Stok yetersizliği cezası
+            }
+        }
+
+        GameState.dayServedCount++;
+        GameState.currentCustomerIndex++;
+    }
+
+    // Temizlik ve Arayüz Güncelleme
+    GameState.resetCart();
+    UIController.syncHeaderStats('money');
+    initShopMedicines();
+
+    // Günü anında bitir ve Gece Moduna/Sonraki Aşamaya Geç
+    enterNightState();
+}
+
+function dismissCustomerWithoutMedication() {
+    if (GameState.status !== 'CUSTOMER_ACTIVE' || GameState.isPaused) {
+        alert("Şu anda gönderebileceğiniz aktif bir müşteri yok.");
+        return;
+    }
+
+    const currentCustomer = GameState.activeDayCustomers[GameState.currentCustomerIndex];
+
+    // Etkiler eşitlendi
+    GameState.modifySatisfaction(-5);
+    GameState.modifyXp(0);
+    GameState.modifyEp(-10);
+    UIController.syncHeaderStats('ep');
+
+    document.getElementById('m-title').innerText = `${currentCustomer.name} Gönderildi`;
+    document.getElementById('m-desc').innerHTML = `
+        <span style="color: var(--warning-color); font-weight: bold;">Müşteriye ilaç satılmadan dükkandan uğurlandı.</span><br><br>
+        <strong>Müşteri Memnuniyeti Etkisi:</strong> <span style="color: var(--danger-color); font-weight: bold;">-5 Puan</span><br>
+        <strong>Kazanılan Deneyim:</strong> <span style="color: #a855f7; font-weight: bold;">+0 XP</span><br>
+        <strong>Eczane Puanı Etkisi:</strong> <span style="color: var(--danger-color); font-weight: bold;">-10 EP</span>
+    `;
+    
+    document.getElementById('m-list').innerHTML = `<li class="failed">İlaç verilmedi.</li>`;
+    document.getElementById('resultModal').style.display = 'flex';
+    document.getElementById('customerPanel').style.borderColor = "var(--danger-color)";
+
+    GameState.dayServedCount++;
+    GameState.currentCustomerIndex++;
+    GameState.resetCart();
+    renderCart();
+
+    // Nöbet bitti mi kontrolü
+    if (GameState.dayServedCount >= GameState.dailyLimit && GameState.isDutyNightActive) {
+        GameState.isDutyNightActive = false;
+        progressToNextDay();
+    }
+}
+
+// YENİ EKLENEN: Geliştirme Modalı Fonksiyonları
+function openUpgradeModal() {
+    renderUpgradesList();
+    document.getElementById('upgradeModal').style.display = 'flex';
+}
+
+function closeUpgradeModal() {
+    document.getElementById('upgradeModal').style.display = 'none';
+}
+
+function renderUpgradesList() {
+    const listContainer = document.getElementById('upgradeList');
+    if (!listContainer) return;
+    listContainer.innerHTML = '';
+
+    upgradesList.forEach((upg, index) => {
+        const card = document.createElement('div');
+        const isEpEnough = GameState.ep >= upg.reqEp;
+        const isMoneyEnough = GameState.money >= upg.price;
+        // Sıralı kilit açma: Önceki geliştirme satın alınmış olmalı (ilk geliştirme hariç)
+        const isPreviousPurchased = index === 0 ? true : upgradesList[index - 1].purchased;
+
+        let cardClass = "upgrade-card";
+        if (upg.purchased) cardClass += " purchased";
+        else if (isEpEnough && isPreviousPurchased) cardClass += " unlocked";
+
+        card.className = cardClass;
+
+        let actionButtonHTML = "";
+
+        if (upg.purchased) {
+            actionButtonHTML = `<button class="upgrade-btn completed">✓ Tamamlandı</button>`;
+        } else if (!isPreviousPurchased) {
+            actionButtonHTML = `<button class="upgrade-btn" disabled>🔒 Önceki Seviyeyi Alın</button>`;
+        } else if (!isEpEnough) {
+            actionButtonHTML = `<button class="upgrade-btn" disabled>🔒 ${upg.reqEp} EP Gerekli</button>`;
+        } else {
+            const btnDisabled = !isMoneyEnough ? "disabled" : "";
+            actionButtonHTML = `
+                <button class="upgrade-btn" ${btnDisabled} onclick="buyUpgrade('${upg.id}')">
+                    Satın Al ($${upg.price})
+                </button>
+            `;
+        }
+
+        card.innerHTML = `
+            <div class="upgrade-info">
+                <h4>${upg.title}</h4>
+                <p>${upg.desc}</p>
+                <div class="upgrade-req">Gereksinim: ${upg.reqEp} EP | Fiyat: $${upg.price}</div>
+            </div>
+            <div>${actionButtonHTML}</div>
+        `;
+
+        listContainer.appendChild(card);
+    });
+}
+
+function buyUpgrade(upgradeId) {
+    const upg = upgradesList.find(u => u.id === upgradeId);
+    if (!upg || upg.purchased) return;
+
+    if (GameState.ep < upg.reqEp) {
+        alert(`Bu geliştirme için en az ${upg.reqEp} Eczane Puanı (EP) gereklidir!`);
+        return;
+    }
+
+    if (GameState.money < upg.price) {
+        alert(`Bütçe Yetersiz! Gerekli: $${upg.price}, Mevcut: $${GameState.money}`);
+        return;
+    }
+
+    // Ödeme ve Aktifleştirme
+    GameState.modifyMoney(-upg.price);
+    UIController.syncHeaderStats('money');
+    
+    upg.purchased = true;
+    upg.action(); // Stok kapasitesini artırır veya otomasyonu açar
+
+    // Arayüzleri yenile
+    initShopMedicines();
+    initDepotMedicines();
+    renderUpgradesList();
+
+    alert(`🎉 Tebrikler! "${upg.title}" geliştirmesi başarıyla tamamlandı!`);
 }
 
 // === WINDOW BAĞLANTILARI & KLAVYE DİNLEYİCİSİ ===
@@ -1608,25 +1931,35 @@ window.updateCartItemQuantity = updateCartItemQuantity;
 window.togglePauseGame = togglePauseGame;
 window.handleLockScreenButtonClick = handleLockScreenButtonClick;
 window.skipNight = skipNight;
+window.selectDutyDay = selectDutyDay;
+window.fastForwardDay = fastForwardDay;
+window.dismissCustomerWithoutMedication = dismissCustomerWithoutMedication;
+window.openUpgradeModal = openUpgradeModal;
+window.closeUpgradeModal = closeUpgradeModal;
+window.buyUpgrade = buyUpgrade;
 
 document.addEventListener("keydown", (event) => {
     const activeElem = document.activeElement;
     if (activeElem && (activeElem.tagName === "INPUT" || activeElem.tagName === "TEXTAREA" || activeElem.isContentEditable)) {
         return;
     }
+
+    // P tuşu ile Duraklatma
     if (event.key === "p" || event.key === "P") {
         togglePauseGame();
+    }
+
+    // F2 Tuşu ile Günü Anında Tamamlama (Dev Shortcut)
+    if (event.key === "F2" || event.key === "f2") {
+        event.preventDefault();
+        fastForwardDay();
     }
 });
 
 document.addEventListener("DOMContentLoaded", () => {
-    // 1. İlk günün müşterilerini seç
     generateRandomCustomersForDay();
-
-    // 2. İlk gün gelecek hastaların ilaçlarını stoklara ekle (diğerlerini 0 yap)
     setupInitialInventoryForFirstDay();
-
-    // 3. Arayüzleri başlat
+    setupDailyCaptchaSchedule();
     initShopMedicines();
     initDepotMedicines();
     UIController.updateStat('moneyDisplay', `$${GameState.money}`, null);
