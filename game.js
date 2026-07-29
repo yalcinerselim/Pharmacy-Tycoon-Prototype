@@ -145,7 +145,7 @@ const upgradesList = [
         title: "Otomatik Günlük Stok Yenileme",
         desc: "Eczane stokları her günün sonunda otomatik olarak maksimum kapasiteye yenilenir.",
         reqEp: 300,
-        price: 2000,
+        price: 1300,
         purchased: false,
         action: function() {
             GameState.autoRestockEnabled = true;
